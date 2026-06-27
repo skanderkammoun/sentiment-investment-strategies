@@ -2,4 +2,5 @@ src/logs/
 venv/
 DVC_Storage/
 *.log
+.env
 
