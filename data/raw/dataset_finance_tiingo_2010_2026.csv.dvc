@@ -1,0 +1,5 @@
+outs:
+- md5: 9e794ac9f81fdb8e7fb97d1db3669393
+  size: 3313148
+  hash: md5
+  path: dataset_finance_tiingo_2010_2026.csv
