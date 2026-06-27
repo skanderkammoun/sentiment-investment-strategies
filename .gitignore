@@ -1,2 +1,4 @@
 /dataset_finance_hybride_2010_2026.csv
 venv/
+DVC_Storage/
+*.log
