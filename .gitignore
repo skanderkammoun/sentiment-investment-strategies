@@ -3,4 +3,5 @@ venv/
 DVC_Storage/
 *.log
 .env
+source_data_trouve_stocktwits/
 
