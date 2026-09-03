@@ -1,0 +1,8 @@
+Variante,n_features,applique_a,AUC_moy,AUC_std,delta_vs_complet
+Toutes les variables,19,test,0.6604,0.0299,0.0
+SANS sentiment (marché seul),9,test,0.4979,0.029,-0.1625
+Sentiment SEUL,10,test,0.6656,0.0254,0.0052
+SANS volume de messages,16,test,0.6635,0.0252,0.0031
+Jeu CONSERVATEUR (coupé minuit),11,test,0.5407,0.0273,-0.1197
+Sentiment INVERSÉ (falsif.),19,test,0.3458,0.0179,-0.3146
+Sentiment PERMUTÉ (placebo),19,deux,0.5019,0.0416,-0.1585

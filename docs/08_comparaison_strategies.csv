@@ -1,0 +1,7 @@
+strategie,jours,rendement_annuel,vol_annuelle,sharpe,max_drawdown,taux_reussite,n_positions,cout_total_pct
+Modèle — binaire,240,81.15,14.59,5.563,-2.85,63.33,1004,0.1
+Modèle — proportionnel,240,88.66,15.18,5.839,-2.95,62.08,1004,0.1
+Modèle — risque,240,83.28,14.78,5.636,-2.43,65.83,1004,0.1
+Long systématique du gap,240,-13.43,17.61,-0.763,-17.31,53.33,1200,0.1
+Positions aléatoires,240,-9.79,13.19,-0.742,-14.47,41.67,790,0.1
+Buy & hold (5 actions),240,21.68,29.1,0.745,-26.09,53.75,240,0.0

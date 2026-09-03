@@ -1,0 +1,8 @@
+Variante,n,AUC,note
+Tous les jours,2636,0.5073,4 plis
+Jours extrêmes seulement (Q1+Q5),1058,0.4669,3 plis
+Sentiment très négatif (Q1),529,,0 plis
+Sentiment très positif (Q5),529,0.4692,1 plis
+Forte attention (A5),529,0.4182,1 plis
+Faible attention (A1),529,,0 plis
+Intensité |sentiment| (non signé),2636,0.517,4 plis

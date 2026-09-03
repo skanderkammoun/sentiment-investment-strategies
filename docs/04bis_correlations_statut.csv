@@ -1,0 +1,19 @@
+Cible,Fenetre,n,rho,STATUT
+gap,mu_overnight,2735,0.101,PREDICTIVE
+gap,mu_pre,2734,0.1816,PREDICTIVE (limite)
+gap,mu_night_full,2736,0.1651,PREDICTIVE (limite)
+gap,mu_open30,2727,0.0623,CONTEMPORAINE / POSTERIEURE
+gap,mu_mkt,2736,0.0672,CONTEMPORAINE / POSTERIEURE
+gap,mu_post,2733,0.0626,CONTEMPORAINE / POSTERIEURE
+ret_oc,mu_overnight,2735,-0.0296,PREDICTIVE
+ret_oc,mu_pre,2734,0.0128,PREDICTIVE
+ret_oc,mu_night_full,2736,-0.01,PREDICTIVE
+ret_oc,mu_open30,2727,0.1021,PREDICTIVE
+ret_oc,mu_mkt,2736,0.2081,PREDICTIVE (limite)
+ret_oc,mu_post,2733,0.1699,CONTEMPORAINE / POSTERIEURE
+ret_cc,mu_overnight,2735,0.0426,PREDICTIVE
+ret_cc,mu_pre,2734,0.1265,PREDICTIVE
+ret_cc,mu_night_full,2736,0.0986,PREDICTIVE
+ret_cc,mu_open30,2727,0.1186,PREDICTIVE
+ret_cc,mu_mkt,2736,0.2025,PREDICTIVE (limite)
+ret_cc,mu_post,2733,0.1703,CONTEMPORAINE / POSTERIEURE

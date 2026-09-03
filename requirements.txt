@@ -11,3 +11,5 @@ tqdm
 hf_xet
 matplotlib
 seaborn
+plotly
+scikit-learn

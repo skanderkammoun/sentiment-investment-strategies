@@ -1,0 +1,13 @@
+Cible,Features,Modele,AUC_moy,AUC_std,plis
+SÉANCE (Open->Close),sentiment seul,logistique,0.5079,0.0478,4
+SÉANCE (Open->Close),sentiment seul,boosting,0.5057,0.0262,4
+SÉANCE (Open->Close),tout,logistique,0.5265,0.0385,4
+SÉANCE (Open->Close),tout,boosting,0.4959,0.0327,4
+SÉANCE (Open->Close),marché seul,logistique,0.5216,0.0582,4
+SÉANCE (Open->Close),marché seul,boosting,0.4866,0.0378,4
+GAP (contrôle positif),sentiment seul,logistique,0.6656,0.0254,4
+GAP (contrôle positif),sentiment seul,boosting,0.6545,0.0225,4
+GAP (contrôle positif),tout,logistique,0.6604,0.0299,4
+GAP (contrôle positif),tout,boosting,0.6677,0.0308,4
+GAP (contrôle positif),marché seul,logistique,0.4979,0.029,4
+GAP (contrôle positif),marché seul,boosting,0.5051,0.0577,4
