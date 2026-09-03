@@ -4,3 +4,10 @@ dvc
 python-dotenv
 requests
 feedparser
+transformers 
+torch
+ipykernel
+tqdm
+hf_xet
+matplotlib
+seaborn

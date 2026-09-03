@@ -1,5 +1,6 @@
 import logging
 import datetime
+import time
 from pathlib import Path
 import pandas as pd
 from seleniumbase import SB
@@ -15,12 +16,13 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 # ==========================================
-# 2. CONSTANTES (Tes 9 Actions)
+# 2. CONSTANTES
 # ==========================================
 TICKERS = ['AAPL', 'MSFT', 'GOOGL', 'META', 'AMZN', 'TSLA', 'UNH', 'BRK.B', 'JPM']
 SUBREDDIT = "wallstreetbets"
 OUTPUT_DIR = Path("data/raw")
 OUTPUT_FILE = OUTPUT_DIR / "reddit_stealth_data_massive.csv"
+MAX_SCROLLS = 150 
 
 # ==========================================
 # 3. FONCTION PRINCIPALE
@@ -31,75 +33,124 @@ def scraper_reddit_massif() -> None:
     logger.info("🚀 Démarrage du navigateur furtif...")
     
     try:
-        # On utilise ton Chrome normal + le masque furtif uc_driver
         with SB(uc=True, test=True) as sb:
             
-            # --- ASTUCE DE PRO : L'ÉCHAUFFEMENT ---
-            # On charge la page d'accueil une fois pour passer les pop-ups éventuels
             logger.info("Échauffement du navigateur sur la page d'accueil...")
             sb.activate_cdp_mode("https://www.reddit.com")
             sb.sleep(5) 
             
             for ticker in TICKERS:
-                logger.info(f"🔍 Recherche en cours pour le ticker : {ticker} ...")
-                url = f"https://www.reddit.com/r/{SUBREDDIT}/search/?q={ticker}&restrict_sr=1&sort=new"
+                logger.info(f"🔍 Recherche en cours pour : {ticker} ...")
+                url = f"https://www.reddit.com/r/{SUBREDDIT}/search/?q={ticker}&restrict_sr=1&sort=new&t=all"
                 
                 sb.activate_cdp_mode(url)
-                sb.sleep(5) # Laisse le temps au réseau de charger
+                sb.sleep(5) 
                 
-                post_title_selector = '[data-testid="post-title"]'
+                logger.info(f"⏬ Démarrage du Smart Scrolling pour {ticker}...")
                 
-                try:
-                    # On attend jusqu'à 25 secondes pour être sûr
-                    sb.wait_for_element(post_title_selector, timeout=25)
-                except Exception as e:
-                    logger.warning(f"⚠️ Aucun post trouvé pour {ticker} (ou temps trop long).")
-                    continue
-                    
-                logger.info(f"⏬ Défilement PROFOND (scrolling) pour {ticker}. Ça va prendre un moment...")
+                last_height = sb.execute_script("return document.body.scrollHeight")
+                scroll_count = 0
                 
-                # --- LE SECRET DE LA MASSE DE DONNÉES ---
-                # On scrolle 80 fois au lieu de 15 !
-                for _ in range(80):
-                    sb.scroll_down(45)
-                    sb.sleep(0.5) # Pause vitale pour laisser Reddit charger la suite
+                while scroll_count < MAX_SCROLLS:
+                    sb.scroll_down(50)
+                    sb.sleep(1) 
+                    new_height = sb.execute_script("return document.body.scrollHeight")
+                    if new_height == last_height:
+                        logger.info(f"🛑 Fin de la page atteinte pour {ticker} après {scroll_count} scrolls.")
+                        break
+                    last_height = new_height
+                    scroll_count += 1
                 
-                # Extraction
-                posts = sb.select_all(post_title_selector)
-                logger.info(f"Extraction terminée : {len(posts)} posts capturés pour {ticker}.")
+                logger.info(f"Extraction JS ultra-agressive pour {ticker}...")
                 
-                for post in posts:
-                    titre = post.text
-                    if titre:
-                        toutes_les_donnees.append({
-                            'Date_Scraping': datetime.datetime.now().strftime('%Y-%m-%d'),
-                            'Ticker': ticker,
-                            'Subreddit': SUBREDDIT,
-                            'Titre': titre
-                        })
+                # --- LE NOUVEAU SUPER EXTRACTEUR JS ---
+                js_extractor = """
+                var extracted_data = [];
+                var titles_found = new Set(); // Pour éviter les doublons directement en JS
+                
+                // Stratégie 1 : L'ancienne méthode (shreddit-post)
+                var posts = document.querySelectorAll('shreddit-post');
+                if (posts.length > 0) {
+                    posts.forEach(function(post) {
+                        var title = post.getAttribute('post-title');
+                        var timestamp = post.getAttribute('created-timestamp');
+                        if (title && timestamp) {
+                            var date_only = timestamp.split('T')[0];
+                            title = title.replace(/\\n/g, ' ').trim();
+                            if (!titles_found.has(title)) {
+                                extracted_data.push({'titre': title, 'date': date_only});
+                                titles_found.add(title);
+                            }
+                        }
+                    });
+                }
+                
+                // Stratégie 2 : La nouvelle méthode (Recherche par liens)
+                if (extracted_data.length === 0) {
+                    // On cible tous les liens qui dirigent vers un commentaire de WallStreetBets
+                    var links = document.querySelectorAll('a[href*="/r/wallstreetbets/comments/"]');
+                    links.forEach(function(link) {
+                        var title = link.innerText;
                         
-                sb.sleep(3) # Petite pause avant de passer à l'action suivante
+                        // Exclusion des liens de commentaires "x comments"
+                        if (title && title.trim().length > 5 && !title.includes(' comments')) {
+                            title = title.replace(/\\n/g, ' ').trim();
+                            
+                            // Recherche de la date à proximité du titre
+                            var container = link.closest('faceplate-tracker, div') || document;
+                            var timeNode = container.querySelector('time, faceplate-timeago');
+                            var date_only = "Date_Inconnue";
+                            
+                            if (timeNode) {
+                                var ts = timeNode.getAttribute('ts') || timeNode.getAttribute('datetime');
+                                if (ts) {
+                                    date_only = ts.split('T')[0];
+                                }
+                            }
+                            
+                            if (!titles_found.has(title)) {
+                                extracted_data.push({'titre': title, 'date': date_only});
+                                titles_found.add(title);
+                            }
+                        }
+                    });
+                }
+                return extracted_data;
+                """
+                
+                posts_data = sb.execute_script(js_extractor)
+                logger.info(f"✅ Extraction terminée : {len(posts_data)} posts capturés pour {ticker}.")
+                
+                for item in posts_data:
+                    # On sauvegarde même s'il manque la date temporairement pour sécuriser la donnée
+                    toutes_les_donnees.append({
+                        'Date_Publication': item['date'],
+                        'Ticker': ticker,
+                        'Subreddit': SUBREDDIT,
+                        'Titre': item['titre']
+                    })
+                        
+                sb.sleep(3) 
                 
     except Exception as e:
         logger.error(f"Une erreur critique est survenue : {e}")
         return
 
     # ==========================================
-    # 4. NETTOYAGE ET SAUVEGARDE (Pandas)
+    # 4. NETTOYAGE ET SAUVEGARDE
     # ==========================================
     if toutes_les_donnees:
         logger.info("Traitement terminé. Nettoyage des données...")
         OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
         
         df = pd.DataFrame(toutes_les_donnees)
-        
-        # --- SUPPRESSION DES DOUBLONS ---
-        # Au cas où le scroll capture deux fois le même post
         df_unique = df.drop_duplicates(subset=['Ticker', 'Titre'])
         
         try:
             df_unique.to_csv(OUTPUT_FILE, index=False, encoding='utf-8')
-            logger.info(f"🎉 SUCCÈS TOTAL ! {len(df_unique)} posts UNIQUES sauvegardés dans : {OUTPUT_FILE}")
+            logger.info(f"🎉 SUCCÈS TOTAL ! {len(df_unique)} posts UNIQUES sauvegardés.")
+            print("\n🔍 APERÇU :")
+            print(df_unique.head())
         except Exception as e:
             logger.error(f"Erreur lors de la sauvegarde : {e}")
     else:
