@@ -1,0 +1,1526 @@
+<!DOCTYPE html>
+<html lang="fr"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Cours 1 — Notebook 03 : construire le panel</title>
+<style>
+:root{--paper:#eef1f4;--surface:#fff;--surface-2:#f5f8fa;--sunken:#e4eaef;--ink:#131b24;
+--ink-2:#37475a;--muted:#66788a;--line:#d3dbe3;--line-2:#c0cbd6;--nuit:#1b4f72;
+--warn:#8a6a1f;--warn-soft:#f7f0dd}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+--paper:#0d1218;--surface:#141c25;--surface-2:#19232e;--sunken:#101820;--ink:#e6edf4;--ink-2:#b7c5d2;
+--muted:#8296a8;--line:#28343f;--line-2:#33424f;--nuit:#7fb8dd;--warn:#d6b768;--warn-soft:#2c2617}}
+:root[data-theme="dark"]{--paper:#0d1218;--surface:#141c25;--surface-2:#19232e;--sunken:#101820;
+--ink:#e6edf4;--ink-2:#b7c5d2;--muted:#8296a8;--line:#28343f;--line-2:#33424f;--nuit:#7fb8dd;
+--warn:#d6b768;--warn-soft:#2c2617}
+*,*::before,*::after{box-sizing:border-box}
+body{background:var(--paper);color:var(--ink);font-family:system-ui,-apple-system,"Segoe UI",sans-serif;
+font-size:16.5px;line-height:1.68;margin:0;padding:0 24px 100px;-webkit-font-smoothing:antialiased}
+.page{max-width:880px;margin:0 auto}
+h1{font-family:"Iowan Old Style",Georgia,serif;font-weight:600;font-size:clamp(29px,5vw,42px);
+line-height:1.13;letter-spacing:-.015em;margin:60px 0 18px;text-wrap:balance}
+h2{font-family:"Iowan Old Style",Georgia,serif;font-weight:600;font-size:27px;letter-spacing:-.01em;
+margin:52px 0 14px;text-wrap:balance}
+h3{font-family:"Iowan Old Style",Georgia,serif;font-weight:600;font-size:20px;margin:32px 0 10px}
+p{margin:0 0 16px}
+strong{font-weight:600}
+code{font-family:Consolas,"Cascadia Mono","Courier New",monospace;font-size:.87em;
+background:var(--sunken);padding:1px 5px;border-radius:2px}
+pre{background:var(--sunken);border-left:3px solid var(--nuit);padding:14px 18px;overflow-x:auto;
+border-radius:0 3px 3px 0;margin:0 0 20px}
+pre code{background:none;padding:0;font-size:13.5px;line-height:1.6;white-space:pre}
+table{border-collapse:collapse;width:100%;font-size:14.5px;background:var(--surface);
+border:1px solid var(--line);border-radius:3px;margin:0 0 22px;display:block;overflow-x:auto}
+th{text-align:left;font-weight:600;font-size:11.5px;letter-spacing:.07em;text-transform:uppercase;
+color:var(--muted);padding:11px 14px;border-bottom:1px solid var(--line-2);background:var(--surface-2);
+white-space:nowrap}
+td{padding:10px 14px;border-bottom:1px solid var(--line);vertical-align:top}
+tr:last-child td{border-bottom:0}
+blockquote{margin:0 0 22px;padding:16px 22px;background:var(--warn-soft);
+border-left:3px solid var(--warn);border-radius:0 3px 3px 0}
+blockquote p:last-child{margin:0}
+blockquote h3{margin-top:0;font-size:17.5px}
+ul,ol{margin:0 0 16px;padding-left:22px}li{margin-bottom:8px}
+hr{border:0;border-top:1px solid var(--line);margin:46px 0}
+a{color:var(--nuit)}
+</style></head>
+<body><div class="page">
+<h1 id="cours-1-notebook-03-construire-le-panel">Cours 1 — Notebook 03 : construire le panel</h1>
+<p><strong>Comment 3,7 millions de messages deviennent 2 740 lignes exploitables</strong></p>
+<p><em>Cours détaillé, cellule par cellule. Chaque variable : à quoi elle sert, sa formule, sa valeur ajoutée.
+Chaque test : ce qu'il vérifie et pourquoi il est construit ainsi.</em></p>
+<hr />
+<h2 id="table-des-matieres">Table des matières</h2>
+<table>
+<thead>
+<tr>
+<th>#</th>
+<th>Chapitre</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>0</td>
+<td>Le vocabulaire de base — à lire en premier</td>
+</tr>
+<tr>
+<td>1</td>
+<td>La configuration : pourquoi une seule cellule</td>
+</tr>
+<tr>
+<td>2</td>
+<td>Charger les messages — et ce que fait vraiment FinBERT</td>
+</tr>
+<tr>
+<td>3</td>
+<td>Le score : <code>mu = pos − neg</code></td>
+</tr>
+<tr>
+<td>4</td>
+<td>Les étiquettes Bullish / Bearish</td>
+</tr>
+<tr>
+<td>5</td>
+<td>Le fuseau horaire — la décision la plus lourde</td>
+</tr>
+<tr>
+<td>6</td>
+<td>Le calendrier de bourse</td>
+</tr>
+<tr>
+<td>7</td>
+<td>Affecter chaque message à un jour et une fenêtre</td>
+</tr>
+<tr>
+<td>8</td>
+<td>Les trois contrôles d'affectation</td>
+</tr>
+<tr>
+<td>9</td>
+<td>Agréger : les sept statistiques</td>
+</tr>
+<tr>
+<td>10</td>
+<td>Le format large et le squelette</td>
+</tr>
+<tr>
+<td>11</td>
+<td>Les variables de marché : <code>gap</code>, <code>ret_oc</code>, <code>ret_cc</code>, <code>vol_20d</code></td>
+</tr>
+<tr>
+<td>12</td>
+<td>La fusion</td>
+</tr>
+<tr>
+<td>13</td>
+<td>Les variables d'attention : <code>nlog</code>, <code>nabn</code>, <code>disp</code></td>
+</tr>
+<tr>
+<td>14</td>
+<td>Les dérivées nocturnes : <code>dmu</code>, <code>ma3</code>, <code>z20</code></td>
+</tr>
+<tr>
+<td>15</td>
+<td>Les décalées et les cibles</td>
+</tr>
+<tr>
+<td>16</td>
+<td>Les sept contrôles qualité</td>
+</tr>
+<tr>
+<td>17</td>
+<td>Récapitulatif — les 10 idées à retenir</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h1 id="chapitre-0-le-vocabulaire-de-base">Chapitre 0 — Le vocabulaire de base</h1>
+<p>Avant de commencer, cinq mots. Si tu les maîtrises, tout le reste devient facile.</p>
+<h2 id="01-une-observation">0.1 — Une observation</h2>
+<p>Une <strong>observation</strong>, c'est une ligne de ton tableau final. Ici, une observation = <strong>un titre, un jour</strong>.</p>
+<blockquote>
+<p>AAPL le 2 janvier 2020 → une observation.
+AAPL le 3 janvier 2020 → une autre observation.
+TSLA le 2 janvier 2020 → une troisième.</p>
+</blockquote>
+<p>Tu as 5 titres × 548 jours = <strong>2 740 observations</strong>.</p>
+<h2 id="02-une-variable-ou-feature">0.2 — Une variable (ou « feature »)</h2>
+<p>Une <strong>variable</strong>, c'est une colonne. C'est une information mesurée pour chaque observation.</p>
+<blockquote>
+<p><code>mu_night_full</code> = « le sentiment moyen de la nuit » → une variable.
+<code>gap</code> = « le saut de prix à l'ouverture » → une autre variable.</p>
+</blockquote>
+<p>Tu as <strong>81 variables</strong>.</p>
+<h2 id="03-une-cible-ou-target">0.3 — Une cible (ou « target »)</h2>
+<p>La <strong>cible</strong>, c'est la variable que tu veux <strong>prédire</strong>. Toutes les autres servent à la prédire.</p>
+<blockquote>
+<p>Cible : <code>y_gap</code> = 1 si l'action ouvre en hausse, 0 sinon.</p>
+</blockquote>
+<h2 id="04-un-panel">0.4 — Un panel</h2>
+<p>Un <strong>panel</strong> (ou données de panel) est un tableau à <strong>deux dimensions d'identification</strong> : des individus
+(ici, les titres) observés à plusieurs dates.</p>
+<table>
+<thead>
+<tr>
+<th>Type de données</th>
+<th>Structure</th>
+<th>Exemple</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Coupe transversale</td>
+<td>plusieurs individus, <strong>une</strong> date</td>
+<td>le prix des 500 actions du S&amp;P le 3 mars 2022</td>
+</tr>
+<tr>
+<td>Série temporelle</td>
+<td><strong>un</strong> individu, plusieurs dates</td>
+<td>le prix d'AAPL de 2020 à 2022</td>
+</tr>
+<tr>
+<td><strong>Panel</strong></td>
+<td>plusieurs individus × plusieurs dates</td>
+<td><strong>le prix des 5 titres, chaque jour, 2020-2022</strong></td>
+</tr>
+</tbody>
+</table>
+<p>Le panel est plus riche : il permet de comparer <strong>dans le temps</strong> (AAPL aujourd'hui vs AAPL le mois
+dernier) <em>et</em> <strong>entre individus</strong> (AAPL vs TSLA le même jour). Mais il impose une discipline : beaucoup de
+calculs doivent être faits <strong>titre par titre</strong>, sinon on mélange l'histoire d'AAPL avec celle de TSLA.
+C'est le rôle du <code>groupby("Ticker")</code> que tu verras partout.</p>
+<p>Un panel est <strong>équilibré</strong> si tous les individus ont le même nombre de dates. Le tien l'est :
+548 jours pour chacun des 5 titres. C'est important — un panel déséquilibré donne mécaniquement plus de
+poids aux titres les mieux couverts.</p>
+<h2 id="05-une-fuite-dinformation-data-leakage">0.5 — Une fuite d'information (« data leakage »)</h2>
+<p>C'est <strong>l'erreur la plus grave</strong> en finance quantitative, et il faut la comprendre tout de suite.</p>
+<p>Il y a fuite quand une variable explicative contient, directement ou indirectement, de l'information qui
+n'existait <strong>pas encore</strong> au moment où l'on prétend faire la prédiction.</p>
+<blockquote>
+<p><strong>Exemple caricatural.</strong> Je veux prédire s'il pleuvra demain. J'utilise comme variable « le nombre de
+parapluies ouverts demain à midi ». Mon modèle est parfait à 99 %. Il est aussi parfaitement inutile :
+le jour où je dois prédire, je ne connais pas cette variable.</p>
+</blockquote>
+<p>En finance, la fuite est presque toujours <strong>subtile</strong> : une moyenne mobile mal décalée, une normalisation
+qui utilise toute la période, un découpage aléatoire au lieu de chronologique. Elle ne provoque aucune
+erreur — elle produit juste des résultats trop beaux.</p>
+<p><strong>La règle unique de tout ce projet :</strong></p>
+<blockquote>
+<p>Une variable est utilisable pour prédire une cible <strong>si et seulement si</strong> elle est entièrement connue
+<strong>avant</strong> que la cible ne commence à se former.</p>
+</blockquote>
+<hr />
+<h1 id="chapitre-1-la-configuration">Chapitre 1 — La configuration</h1>
+<pre><code class="language-python">PROJET = r&quot;C:\Users\semy4\OneDrive\Bureau\Fintech_project&quot;
+C_JOUR, C_HEURE, C_TICKER = &quot;Jour&quot;, &quot;Heure_decimale&quot;, &quot;Ticker&quot;
+C_POS, C_NEG, C_NEU = &quot;FinBERT_Positive&quot;, &quot;FinBERT_Negative&quot;, &quot;FinBERT_Neutral&quot;
+TICKERS = [&quot;AAPL&quot;, &quot;AMZN&quot;, &quot;META&quot;, &quot;NVDA&quot;, &quot;TSLA&quot;]
+DEBUT, FIN = &quot;2020-01-02&quot;, &quot;2022-03-04&quot;
+</code></pre>
+<h2 id="pourquoi-tout-regrouper-ici">Pourquoi tout regrouper ici</h2>
+<p>C'est un principe de génie logiciel appelé <strong>« une seule source de vérité »</strong> (<em>single source of truth</em>).</p>
+<p><strong>Le problème qu'il résout.</strong> Imagine que le nom de ta colonne de date soit écrit en dur dans 30 cellules
+différentes. Le jour où tu la renommes, il faut modifier 30 endroits. Tu en oublieras un, et le notebook
+plantera trois heures plus tard sans que tu comprennes pourquoi.</p>
+<p><strong>En recherche, c'est encore plus important que dans l'industrie</strong>, pour une raison précise : la
+<strong>reproductibilité</strong>. Un mémoire doit pouvoir être refait à l'identique. Si les paramètres sont éparpillés,
+personne — pas même toi dans six mois — ne saura quelle version a produit quel résultat.</p>
+<p><strong>La valeur ajoutée concrète :</strong> changer de machine = modifier <strong>une ligne</strong>. Changer de période d'étude =
+modifier <strong>une ligne</strong>. C'est aussi ce qui te permet de faire une <strong>analyse de sensibilité</strong> : refaire tout
+avec <code>DEBUT = "2021-01-01"</code> pour voir si les conclusions tiennent.</p>
+<hr />
+<h1 id="chapitre-2-charger-les-messages">Chapitre 2 — Charger les messages</h1>
+<h2 id="ce-que-dit-la-sortie">Ce que dit la sortie</h2>
+<pre><code>3,711,333 messages chargés
+Colonnes : ['Tweet', 'Ticker', 'Jour', 'Heure_decimale',
+            'Texte_Nettoye', 'FinBERT_Positive',
+            'FinBERT_Negative', 'FinBERT_Neutral']
+</code></pre>
+<h2 id="21-ce-que-fait-finbert-explique-simplement">2.1 — Ce que fait FinBERT, expliqué simplement</h2>
+<p><strong>BERT</strong> est un modèle de langage : il lit une phrase et la transforme en nombres qui capturent son sens.
+<strong>FinBERT</strong> est un BERT ré-entraîné sur des textes financiers.</p>
+<p>Pour chaque message, FinBERT renvoie <strong>trois probabilités qui font toujours 1</strong> :</p>
+<pre><code>p(positif)  +  p(neutre)  +  p(négatif)  =  1
+</code></pre>
+<p>Regarde tes propres lignes :</p>
+<table>
+<thead>
+<tr>
+<th>Message</th>
+<th>pos</th>
+<th>neg</th>
+<th>neu</th>
+<th>Lecture</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>« Happy New Year amazing winning AAPL Bull… »</td>
+<td>0,99999</td>
+<td>0,0000005</td>
+<td>0,000004</td>
+<td>FinBERT est <strong>certain</strong> que c'est haussier</td>
+</tr>
+<tr>
+<td>« my dad ended this year by selling half his $aapl… »</td>
+<td>0,00012</td>
+<td>0,99964</td>
+<td>0,00024</td>
+<td><strong>certain</strong> que c'est baissier</td>
+</tr>
+<tr>
+<td>« Happy New Year :) $AAPL $TSLA $AMZN $SPY »</td>
+<td>0,00007</td>
+<td>0,00001</td>
+<td>0,99992</td>
+<td><strong>aucun contenu financier</strong></td>
+</tr>
+</tbody>
+</table>
+<p>C'est bien un <strong>modèle probabiliste</strong> : il ne dit pas « ce message est positif », il dit « je suis certain
+à 99,999 % que ce message est positif ». Cette nuance est précieuse — elle permet de pondérer un message
+franc plus qu'un message ambigu.</p>
+<h2 id="22-le-chiffre-inquietant-807-de-neutre">2.2 — Le chiffre inquiétant : 80,7 % de neutre</h2>
+<pre><code>Masse 'neutre' moyenne de FinBERT : 0.807
+Messages classés neutres à plus de 90 % : 75.8%
+</code></pre>
+<p><strong>Trois messages sur quatre</strong> sont classés « neutres à plus de 90 % ». Autrement dit, FinBERT ne voit
+aucun contenu financier dans les trois quarts de ton corpus.</p>
+<p><strong>Pourquoi ?</strong> FinBERT a été entraîné sur de la <strong>presse financière</strong> : dépêches Reuters, notes
+d'analystes, rapports annuels. Un langage formel, complet, en phrases. Or StockTwits, c'est :</p>
+<blockquote>
+<p>« $TSLA 🚀🚀🚀 to the moon »
+« $AAPL calls printing »
+« diamond hands 💎🙌 »</p>
+</blockquote>
+<p>FinBERT n'a jamais vu ça pendant son entraînement. Il ne comprend ni les emojis, ni le jargon d'options,
+ni les mèmes. Il répond donc « neutre », qui est sa position de repli.</p>
+<p><strong>Ce phénomène a un nom : le décalage de domaine</strong> (<em>domain shift</em>). Un modèle entraîné sur une
+distribution A appliqué à une distribution B perd de sa performance, même si les deux « parlent de la même
+chose ».</p>
+<p><strong>Quelle est la conséquence réelle ?</strong> Ton signal ne repose pas sur 3,7 millions de messages : il repose
+sur <strong>le quart</strong> que FinBERT sait lire, soit environ 900 000 messages. Les 2,8 millions restants ajoutent
+du zéro à ta moyenne — ils la <strong>diluent</strong> sans l'orienter.</p>
+<p><strong>Et pourtant le signal existe quand même.</strong> C'est en soi un résultat intéressant : même avec un
+instrument de mesure imparfait qui ignore 75 % du corpus, on détecte une corrélation de 0,157. Avec un
+classifieur adapté au langage des forums, elle serait probablement plus forte. C'est ta <strong>première piste
+d'amélioration</strong>, et il faut la présenter comme telle.</p>
+<h2 id="23-le-desequilibre-entre-titres">2.3 — Le déséquilibre entre titres</h2>
+<pre><code>TSLA    1 906 665      (51 % du corpus à lui seul)
+AAPL      904 344
+AMZN      421 330
+META      256 031
+NVDA      222 963
+</code></pre>
+<p>TSLA représente <strong>plus de la moitié</strong> de tous les messages. C'est un fait sur lequel il faut réfléchir.</p>
+<p><strong>Ce que ça veut dire :</strong> si tu calculais une statistique globale sur tous les messages mélangés, elle
+serait à moitié une statistique sur TSLA. Toute conclusion « globale » serait en réalité une conclusion
+sur Tesla.</p>
+<p><strong>Pourquoi ce n'est pas grave ici :</strong> parce que le panel agrège <strong>par titre et par jour</strong>. Chaque
+observation pèse pareil, qu'elle contienne 96 messages (NVDA) ou 1 138 (TSLA). Le déséquilibre du corpus
+brut ne se transmet donc pas au panel.</p>
+<p><strong>Mais il reste une conséquence subtile.</strong> La qualité de mesure n'est pas la même partout : le sentiment
+moyen d'une nuit NVDA (96 messages) est bien plus bruité que celui d'une nuit TSLA (1 138 messages). C'est
+un cas d'<strong>hétéroscédasticité</strong> — la variance de l'erreur n'est pas constante. Une amélioration possible
+serait de pondérer les observations par <code>√n</code>.</p>
+<hr />
+<h1 id="chapitre-3-le-score-mu-pos-neg">Chapitre 3 — Le score : <code>mu = pos − neg</code></h1>
+<pre><code class="language-python">m[&quot;score&quot;] = m[&quot;p_pos&quot;] - m[&quot;p_neg&quot;]
+</code></pre>
+<h2 id="31-pourquoi-cette-formule-et-pas-une-autre">3.1 — Pourquoi cette formule et pas une autre</h2>
+<p>On veut résumer trois probabilités en <strong>un seul nombre</strong> qui dit « à quel point ce message est haussier ».</p>
+<pre><code>score = p(positif) − p(négatif)          compris entre −1 et +1
+</code></pre>
+<p><strong>Trois propriétés utiles :</strong></p>
+<ol>
+<li><strong>Bornée</strong> entre −1 et +1 — comparable d'un message à l'autre.</li>
+<li><strong>Symétrique</strong> — un message parfaitement haussier vaut +1, parfaitement baissier −1.</li>
+<li><strong>Le neutre annule</strong> — si <code>p_neu = 1</code>, alors <code>pos ≈ neg ≈ 0</code> et le score vaut 0.</li>
+</ol>
+<p><strong>Pourquoi pas <code>p_pos</code> seul ?</strong> Parce qu'un message à <code>p_pos = 0,3</code> peut être soit modérément haussier
+(<code>neg = 0,1</code>), soit très partagé (<code>neg = 0,3</code>). La différence distingue les deux.</p>
+<p><strong>Pourquoi pas <code>p_pos / (p_pos + p_neg)</code> ?</strong> Cette formule ignore l'intensité : un message à
+(0,50 ; 0,05) et un à (0,05 ; 0,005) donneraient tous deux ≈ 0,91. Or le premier est bien plus informatif.</p>
+<h2 id="32-le-piege-de-lambiguite">3.2 — Le piège de l'ambiguïté</h2>
+<p>Un score de 0 recouvre <strong>deux situations très différentes</strong> :</p>
+<table>
+<thead>
+<tr>
+<th>Cas</th>
+<th>pos</th>
+<th>neg</th>
+<th>neu</th>
+<th>score</th>
+<th>Interprétation</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>A</td>
+<td>0,00</td>
+<td>0,00</td>
+<td>1,00</td>
+<td>0</td>
+<td>message sans contenu financier</td>
+</tr>
+<tr>
+<td>B</td>
+<td>0,50</td>
+<td>0,50</td>
+<td>0,00</td>
+<td>0</td>
+<td>message <strong>très</strong> chargé mais ambigu</td>
+</tr>
+</tbody>
+</table>
+<p>C'est pour cela qu'on conserve <code>pos</code> et <code>neg</code> <strong>séparément</strong> dans le panel : le score seul perd cette
+information.</p>
+<h2 id="33-lidentite-qui-a-des-consequences">3.3 — L'identité qui a des conséquences</h2>
+<p>Puisque <code>score = p_pos − p_neg</code> pour <strong>chaque</strong> message, la moyenne suit :</p>
+<pre><code>        1                                  
+mu  =  ─── × Σ ( pos_i − neg_i )  =  moyenne(pos) − moyenne(neg)  =  pos − neg
+        n   i
+</code></pre>
+<p>Ce n'est pas une approximation, c'est une <strong>identité exacte</strong>. Le notebook la vérifie : erreur maximale
+<strong>1,1 × 10⁻¹⁶</strong> — la précision de la machine.</p>
+<blockquote>
+<h3 id="la-consequence-pour-la-modelisation-la-colinearite-parfaite">⚠ La conséquence pour la modélisation : la colinéarité parfaite</h3>
+<p>Si tu mets <code>mu</code>, <code>pos</code> et <code>neg</code> ensemble dans une régression, tu crées une relation
+<strong>linéairement exacte</strong> entre trois variables explicatives.</p>
+<p><strong>Pourquoi c'est un problème.</strong> Une régression cherche des coefficients β tels que
+<code>y ≈ β₁·mu + β₂·pos + β₃·neg</code>. Mais si <code>mu = pos − neg</code>, alors une infinité de combinaisons donnent
+exactement le même résultat :</p>
+<ul>
+<li><code>(β₁, β₂, β₃) = (1, 0, 0)</code> → prédiction identique à</li>
+<li><code>(β₁, β₂, β₃) = (0, 1, −1)</code> → identique à</li>
+<li><code>(β₁, β₂, β₃) = (10, −9, 9)</code> → identique…</li>
+</ul>
+<p>La solution n'est <strong>pas unique</strong>. Numériquement, l'algorithme choisit une des infinités de solutions,
+souvent avec des coefficients énormes et de signes absurdes.</p>
+<p><strong>C'est exactement ce qui s'est passé dans ton notebook 06</strong> : <code>z_mu_night_full</code> avec un coefficient de
+<strong>+1,00</strong> et <code>z_pos_night_full</code> avec <strong>−0,74</strong>, alors que les deux mesurent l'optimisme et devraient
+avoir le même signe. Les coefficients ne veulent rien dire.</p>
+<p><strong>La mesure de ce problème s'appelle le VIF</strong> (<em>Variance Inflation Factor</em>) :</p>
+<p>```
+              1
+VIF(j)  =  ────────        où R²(j) = R² de la régression de la variable j
+            1 − R²(j)             sur toutes les autres variables</p>
+</blockquote>
+<pre><code>&gt;
+&gt; où `R²ⱼ` est le R² de la régression de la variable *j* sur toutes les autres. Si une variable est
+&gt; parfaitement prédite par les autres, `R²ⱼ = 1` et le VIF explose. Règle usuelle : **au-dessus de 5, on
+&gt; retire**. Dans ton notebook 06, `ret_cc_lag1` a un VIF de **1 516**.
+&gt;
+&gt; **Remarque importante :** la colinéarité n'abîme **pas** la qualité de la *prédiction* (l'AUC reste
+&gt; bonne), elle abîme l'*interprétation*. Les arbres de décision n'en souffrent pas du tout. C'est donc un
+&gt; problème de mémoire — tu veux pouvoir expliquer tes coefficients — pas un problème de performance.
+
+---
+
+# Chapitre 4 — Les étiquettes Bullish / Bearish
+
+</code></pre>
+<p>Aucune colonne d'étiquette Bullish/Bearish dans ce fichier.</p>
+<pre><code>
+Le jeu de données Kaggle contient une colonne où **l'auteur du message a lui-même déclaré** son
+orientation (bouton « Bullish » ou « Bearish » sur StockTwits). Environ 20-25 % des messages en portent
+une. Ton fichier ne l'a pas conservée.
+
+## Pourquoi il faut aller la rechercher
+
+C'est ce qu'on appelle une **vérité terrain externe** (*external ground truth*) : une mesure indépendante
+de la même chose, produite par une autre source.
+
+**Usage n° 1 — valider ton instrument de mesure.** Tu as un problème que le raisonnement seul ne peut pas
+résoudre : FinBERT met 80 % sur « neutre ». Le jury demandera : *« votre mesure mesure-t-elle réellement
+le sentiment ? »*
+
+Avec les étiquettes, tu peux calculer l'AUC de FinBERT pour retrouver l'orientation déclarée. Si elle
+dépasse 0,70, tu écris :
+
+&gt; « Sur les N messages portant une étiquette posée par leur auteur, le score FinBERT retrouve
+&gt; l'orientation déclarée avec une AUC de 0,XX. L'instrument de mesure est donc **validé sur une source
+&gt; externe et indépendante**. »
+
+C'est de la **validation d'instrument**. En actuariat comme en sciences expérimentales, c'est une étape
+obligatoire qu'on saute rarement impunément.
+
+**Usage n° 2 — une mesure alternative gratuite.** Tu peux construire, sans aucun modèle :
+
+</code></pre>
+<pre><code>             nombre de messages « Bullish »
+</code></pre>
+<p>bull_rate  =  ──────────────────────────────────────
+              nb « Bullish »  +  nb « Bearish »</p>
+<pre><code>
+et refaire toute la partie 4 avec. Si les deux mesures donnent la même conclusion, ton résultat ne dépend
+plus du choix de FinBERT. C'est le **test de robustesse le plus rentable** du mémoire : peu de travail,
+beaucoup de crédibilité.
+
+---
+
+# Chapitre 5 — Le fuseau horaire
+
+## 5.1 — Le problème
+
+Ton fichier a `Jour` et `Heure_decimale`. Mais `Heure_decimale` est **un nombre sans étiquette** : rien ne
+dit si c'est l'heure de New York ou l'heure UTC.
+
+Or la bourse de New York ouvre à **9h30 heure locale**, ce qui donne :
+
+| Période | Fuseau NY | 9h30 NY = |
+|---|---|---|
+| novembre → mars | EST (UTC−5) | **14h30 UTC** |
+| mars → novembre | EDT (UTC−4) | **13h30 UTC** |
+
+**Si on se trompe de 5 heures, tous les messages changent de fenêtre.** Ceux de 14h UTC — juste avant
+l'ouverture, donc de l'information **prédictive** — seraient rangés dans `mkt`, une fenêtre
+**contemporaine**. Le signal disparaîtrait, ou une fuite apparaîtrait.
+
+Et attention : le décalage **n'est pas constant**. Retrancher 5 h toute l'année fausserait environ
+**8 mois sur 12** (la période d'heure d'été). C'est pour cela qu'on utilise toujours
+`tz_localize` + `tz_convert` et **jamais** une soustraction manuelle : la bibliothèque connaît les dates
+de changement d'heure, pas nous.
+
+## 5.2 — Le diagnostic : trancher par les données
+
+On ne cherche pas la réponse dans la documentation — on la **déduit du comportement observé**.
+
+**L'idée.** Les marchés produisent une empreinte horaire très reconnaissable : l'activité explose à
+l'ouverture, reste forte pendant la séance, s'effondre la nuit. Il suffit donc de regarder **à quelle
+heure les gens écrivent**.
+
+</code></pre>
+<p>Heure la plus active : 10h
+part 9h-16h  : 59.3%      ← si les heures sont en NY
+part 13h-21h : 44.0%      ← si les heures sont en UTC</p>
+<p>=&gt; VERDICT : les heures sont déjà en HEURE DE NEW YORK.</p>
+<pre><code>
+Le pic à **10h** et 59,3 % des messages entre 9h et 16h : c'est sans ambiguïté. Tes heures sont déjà en
+heure de marché, aucune conversion n'est nécessaire.
+
+**Pourquoi ce test fonctionne si bien.** Les deux hypothèses prédisent des choses **différentes et
+mutuellement exclusives**. Si c'était de l'UTC, le pic tomberait vers 15-16h (= 10-11h NY). Il tombe à
+10h. Une hypothèse est éliminée.
+
+C'est la démarche scientifique de base : formuler deux hypothèses concurrentes, trouver une observation
+qui les distingue, et laisser les données trancher.
+
+## 5.3 — Le second contrôle, indépendant
+
+</code></pre>
+<p>Messages par jour — vendredi : 5,408   samedi : 935   (rapport 0.17)
+Part des messages du samedi postés avant 6h : 13.1%</p>
+<pre><code>
+**Pourquoi un deuxième test ?** Parce qu'un seul test peut mentir. Si la communauté StockTwits était très
+européenne, le profil horaire serait décalé pour une raison qui n'a rien à voir avec le fuseau
+d'enregistrement.
+
+**L'idée du test.** Si les heures étaient en UTC, le tout début du samedi UTC (00h-06h) correspondrait au
+**vendredi soir new-yorkais** (19h-01h) — encore actif. On attendrait donc beaucoup de messages avant 6h
+le samedi. On en trouve **13,1 %**, une valeur faible : cohérent avec l'hypothèse « heure de New York ».
+
+Les deux tests, construits sur des raisonnements différents, donnent la même réponse. C'est ce qu'on
+appelle une **convergence de preuves** — bien plus solide qu'un test unique.
+
+**Au passage**, le rapport vendredi/samedi de 0,17 est lui-même une validation : l'activité s'effondre le
+week-end, comme attendu quand on parle de bourse.
+
+&gt; **Pour le mémoire :** cette figure va en annexe. Elle répond par avance à la question
+&gt; *« comment savez-vous que vos fenêtres sont bien alignées ? »* — et cette question **sera** posée.
+
+---
+
+# Chapitre 6 — Le calendrier de bourse
+
+```python
+CALENDRIER = np.array(sorted(fin[&quot;Date&quot;].unique()))
+</code></pre>
+<h2 id="lidee-deduire-le-calendrier-des-prix-eux-memes">L'idée : déduire le calendrier des prix eux-mêmes</h2>
+<p>On pourrait installer une bibliothèque de calendriers boursiers. On fait autrement, et c'est <strong>plus
+fiable</strong> : si Yahoo Finance renvoie une ligne de prix pour une date, c'est que la bourse était ouverte ce
+jour-là.</p>
+<pre><code>607 jours de bourse dans le calendrier
+Week-ends présents (doit être 0) : 0
+  2020-01-20 : absent — férié bien exclu      (Martin Luther King Day)
+  2020-07-03 : absent — férié bien exclu      (Independence Day observé)
+  2020-11-26 : absent — férié bien exclu      (Thanksgiving)
+  2020-12-25 : absent — férié bien exclu      (Noël)
+  2021-07-05 : absent — férié bien exclu      (Independence Day observé)
+</code></pre>
+<p>Ce calendrier gère <strong>automatiquement</strong> : week-ends, fériés fédéraux américains, fermetures
+exceptionnelles, et même les décalages de fériés (le 4 juillet 2020 tombait un samedi, le marché a fermé
+le vendredi 3).</p>
+<h2 id="le-principe-general-a-retenir">Le principe général à retenir</h2>
+<blockquote>
+<p>Quand deux sources de données doivent être alignées, <strong>déduis le calendrier de la source la plus
+contraignante</strong> plutôt que d'en importer un de l'extérieur.</p>
+</blockquote>
+<p>Un calendrier externe peut diverger de tes données (mauvaise place boursière, mise à jour manquée, fuseau
+différent) et tu ne le verras jamais. Un calendrier déduit ne peut pas diverger — il <em>est</em> les données.</p>
+<h2 id="une-subtilite-importante-la-marge-damorcage">Une subtilité importante : la marge d'amorçage</h2>
+<pre><code>3,035 lignes de prix | 2019-11-04 -&gt; 2022-03-31
+</code></pre>
+<p>Tes prix commencent le <strong>4 novembre 2019</strong>, deux mois avant la période d'étude. Ce n'est pas un hasard —
+c'est nécessaire, pour deux raisons :</p>
+<ol>
+<li><strong><code>prev_close</code> du 2 janvier 2020</strong> est la clôture du 31 décembre 2019. Sans elle, le premier <code>gap</code> de
+   chaque titre serait vide.</li>
+<li><strong><code>vol_20d</code></strong> a besoin de 20 jours d'historique. Sans amorçage, tout le premier mois serait vide.</li>
+</ol>
+<p><strong>Une asymétrie à savoir expliquer :</strong> les <strong>prix</strong> remontent avant 2020, les <strong>messages</strong> non. C'est
+pourquoi <code>vol_20d</code> est renseigné dès la première ligne alors que <code>mu_night_z20</code> est vide pendant les 20
+premiers jours. Ce n'est pas une incohérence, c'est la conséquence de deux sources qui ne commencent pas
+au même moment.</p>
+<hr />
+<h1 id="chapitre-7-affecter-chaque-message">Chapitre 7 — Affecter chaque message</h1>
+<p>C'est <strong>le cœur du notebook</strong>. Tout le reste n'est que de l'agrégation.</p>
+<h2 id="71-les-six-fenetres">7.1 — Les six fenêtres</h2>
+<table>
+<thead>
+<tr>
+<th>Fenêtre</th>
+<th>De</th>
+<th>À</th>
+<th>Durée</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>overnight(D)</code></td>
+<td><strong>16h00 du jour de bourse précédent</strong></td>
+<td>00h00 du jour D</td>
+<td>~8 h (ou ~56 h le lundi)</td>
+</tr>
+<tr>
+<td><code>pre(D)</code></td>
+<td>00h00 du jour D</td>
+<td>09h30</td>
+<td>9,5 h</td>
+</tr>
+<tr>
+<td><code>night_full(D)</code></td>
+<td>= <code>overnight</code> ∪ <code>pre</code></td>
+<td>—</td>
+<td>toute la fermeture</td>
+</tr>
+<tr>
+<td><code>open30(D)</code></td>
+<td>09h30</td>
+<td>10h00</td>
+<td>0,5 h</td>
+</tr>
+<tr>
+<td><code>mkt(D)</code></td>
+<td>10h00</td>
+<td>16h00</td>
+<td>6 h</td>
+</tr>
+<tr>
+<td><code>post(D)</code></td>
+<td>16h00 du jour D</td>
+<td>00h00 du lendemain</td>
+<td>8 h</td>
+</tr>
+</tbody>
+</table>
+<h2 id="72-pourquoi-ce-decoupage-et-pas-un-autre">7.2 — Pourquoi ce découpage et pas un autre</h2>
+<p>Ces frontières ne sont pas arbitraires : elles correspondent à des <strong>changements de régime de marché</strong>.</p>
+<table>
+<thead>
+<tr>
+<th>Frontière</th>
+<th>Ce qui change</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>16h00</strong></td>
+<td>la bourse ferme, les prix cessent d'être cotés en continu</td>
+</tr>
+<tr>
+<td><strong>00h00</strong></td>
+<td>frontière calendaire (utile pour séparer « soir » et « matin »)</td>
+</tr>
+<tr>
+<td><strong>09h30</strong></td>
+<td>la bourse ouvre — le prix saute d'un coup, c'est le <strong>gap</strong></td>
+</tr>
+<tr>
+<td><strong>10h00</strong></td>
+<td>la première demi-heure est atypique : volatilité extrême, spreads larges, exécution des ordres accumulés pendant la nuit</td>
+</tr>
+<tr>
+<td><strong>16h00</strong></td>
+<td>la bourse ferme à nouveau</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Pourquoi isoler <code>open30</code> ?</strong> Parce que les 30 premières minutes ne ressemblent à rien d'autre. Les
+ordres accumulés pendant 17 h s'exécutent, la volatilité y est 3 à 5 fois supérieure au reste de la
+séance. Les mélanger au reste diluerait les deux.</p>
+<h2 id="73-la-regle-du-lundi">7.3 — La règle du lundi</h2>
+<p>Regarde bien la définition de <code>overnight</code> : elle part du <strong>jour de bourse</strong> précédent, pas du jour
+calendaire.</p>
+<ul>
+<li><strong>Mardi</strong> → <code>overnight(mardi)</code> = lundi 16h → mardi 00h. C'est exactement <code>post(lundi)</code>.</li>
+<li><strong>Lundi</strong> → <code>overnight(lundi)</code> = <strong>vendredi</strong> 16h → lundi 00h. Cela comprend le vendredi soir,
+  <strong>tout le samedi et tout le dimanche</strong>.</li>
+</ul>
+<p><strong>Pourquoi c'est la bonne définition.</strong> Ce qui compte n'est pas le calendrier civil, c'est <strong>l'intervalle
+pendant lequel le marché est fermé</strong>. Un investisseur qui achète le vendredi à 16h ne peut rien faire
+jusqu'au lundi 9h30 : tout ce qui se dit pendant ces 65 heures est pertinent pour le gap du lundi.</p>
+<h2 id="74-deux-affectations-pas-une">7.4 — Deux affectations, pas une</h2>
+<p>Un message peut appartenir à <strong>deux fenêtres à la fois</strong> — et ce n'est pas un bug :</p>
+<ul>
+<li>un message du <strong>jeudi 18h</strong> est dans <code>post(jeudi)</code> <strong>et</strong> dans <code>overnight(vendredi)</code> ;</li>
+<li>un message du <strong>samedi 11h</strong> est dans <code>overnight(lundi)</code> seulement (le samedi n'étant pas un jour de
+  bourse, il n'a pas de fenêtre <code>post</code>).</li>
+</ul>
+<p>Ce sont <strong>deux points de vue</strong> sur le même message : « ce qui s'est dit après la clôture de jeudi » et
+« ce qui s'est dit avant l'ouverture de vendredi ». Les deux sont légitimes, et ils vivent dans des
+colonnes différentes.</p>
+<h2 id="75-lalgorithme-explique">7.5 — L'algorithme, expliqué</h2>
+<pre><code class="language-python">i_gauche = np.searchsorted(CALENDRIER, d, side=&quot;left&quot;)   # 1er jour de bourse &gt;= date
+i_droite = np.searchsorted(CALENDRIER, d, side=&quot;right&quot;)  # 1er jour de bourse &gt;  date
+i_nuit = np.where(apres_cloture, i_droite, i_gauche)
+</code></pre>
+<p><code>searchsorted</code> répond à : <em>« à quelle position insérer cette date dans la liste triée des jours de
+bourse ? »</em> C'est une <strong>recherche dichotomique</strong>, en O(log n) — indispensable ici, car une boucle Python
+sur 3,7 millions de messages prendrait des heures alors que ceci prend quelques secondes.</p>
+<p>La logique :</p>
+<ul>
+<li>message posté <strong>après 16h</strong> → il se rattache forcément au jour de bourse <strong>suivant</strong> (<code>side="right"</code>) ;</li>
+<li>message posté <strong>avant 16h</strong> → il se rattache au premier jour de bourse <strong>≥ sa date</strong> (<code>side="left"</code>),
+  donc à lui-même si c'est un jour ouvré, sinon au prochain (samedi → lundi).</li>
+</ul>
+<h2 id="76-les-resultats">7.6 — Les résultats</h2>
+<pre><code>Affectation A — intra-journalière :        Affectation B — nocturne :
+  mkt       1 793 119                        overnight    1 096 322
+  post        825 168                        pre            619 328
+  pre         619 328                        (aucune)     1 995 683
+  (aucune)    271 154
+  open30      202 564
+</code></pre>
+<p><strong>Lecture.</strong> 1,79 M de messages pendant la séance (48 %), 1,10 M pendant la nuit (30 %), 271 154 un jour
+non ouvré (7 %). Les 271 154 messages de week-end n'ont <strong>pas</strong> de fenêtre intra-journalière — normal, il
+n'y a pas de séance ce jour-là — mais ils comptent bien dans la fenêtre nocturne du lundi.</p>
+<hr />
+<h1 id="chapitre-8-les-trois-controles-daffectation">Chapitre 8 — Les trois contrôles d'affectation</h1>
+<p>C'est un principe méthodologique fondamental : <strong>ne jamais faire confiance à un calcul complexe sans le
+vérifier par un chemin indépendant.</strong></p>
+<h2 id="controle-1-le-lundi-absorbe-t-il-le-week-end">Contrôle 1 — Le lundi absorbe-t-il le week-end ?</h2>
+<pre><code>messages overnight, en moyenne — lundi :  629
+                                 autres :  348
+rapport : 1.81x
+</code></pre>
+<p><strong>Ce qu'il teste.</strong> Si <code>overnight</code> partait du jour <strong>calendaire</strong> précédent au lieu du jour de <strong>bourse</strong>,
+le lundi aurait autant de messages que les autres jours. Le rapport de 1,81× prouve que la règle est bien
+appliquée.</p>
+<p><strong>Pourquoi 1,81 et pas 3 ?</strong> Parce que l'activité s'effondre le week-end : le samedi ne pèse que 0,17× un
+vendredi. Le lundi couvre 3 jours civils, mais deux d'entre eux sont très calmes. Le chiffre attendu est
+donc autour de 1 + 0,17 + 0,17 ≈ 1,3 à 2. <strong>1,81 est exactement dans la fourchette.</strong></p>
+<p>Ce genre de vérification — prédire l'ordre de grandeur <em>avant</em> de regarder — est la meilleure façon de
+détecter une erreur.</p>
+<h2 id="controle-2-aucune-contamination">Contrôle 2 — Aucune contamination</h2>
+<pre><code>messages en infraction : 0   -&gt; doit valoir 0
+</code></pre>
+<p><strong>Ce qu'il teste.</strong> Qu'aucun message posté <strong>pendant la séance</strong> (9h30-16h) ne soit classé dans une
+fenêtre nocturne. Une seule infraction créerait une fuite : de l'information de la séance servirait à
+prédire l'ouverture du même jour.</p>
+<p>C'est un test <strong>binaire</strong> : 0 ou échec. Pas de zone grise.</p>
+<h2 id="controle-3-ladditivite">Contrôle 3 — L'additivité</h2>
+<pre><code>overnight 1 096 322 + pre 619 328 = 1 715 650   |   night_full 1 715 650
+cohérent : True
+</code></pre>
+<p><strong>Ce qu'il teste.</strong> Que <code>night_full</code> soit exactement l'union de <code>overnight</code> et <code>pre</code>, sans doublon ni
+oubli.</p>
+<p><strong>Pourquoi c'est important.</strong> Ces trois variables seront utilisées ensemble dans les analyses. Si
+l'additivité était fausse, tous les raisonnements du type « le signal vient plutôt de <code>pre</code> que de
+<code>overnight</code> » seraient faux.</p>
+<hr />
+<h1 id="chapitre-9-agreger-les-sept-statistiques">Chapitre 9 — Agréger : les sept statistiques</h1>
+<p>Pour chaque triplet (<strong>titre</strong>, <strong>jour</strong>, <strong>fenêtre</strong>), on résume tous les messages en sept nombres.</p>
+<h2 id="91-les-sept-une-par-une">9.1 — Les sept, une par une</h2>
+<h3 id="n-le-nombre-de-messages"><code>n</code> — le nombre de messages</h3>
+<pre><code>n  =  nombre de messages tombant dans la fenêtre
+</code></pre>
+<p><strong>Ce qu'elle mesure :</strong> le <strong>volume d'attention</strong>. Combien de personnes parlent de ce titre.</p>
+<p><strong>Sa valeur ajoutée :</strong> l'attention et le sentiment sont <strong>deux choses différentes</strong>. Une action peut être
+massivement discutée sans que l'opinion soit tranchée. Le volume prédit l'<strong>amplitude</strong> des mouvements ;
+le sentiment prédit leur <strong>direction</strong>.</p>
+<h3 id="mu-le-sentiment-moyen"><code>mu</code> — le sentiment moyen</h3>
+<pre><code>        1     n
+mu  =  ─── ×  Σ  score_i           (la moyenne arithmétique des scores)
+        n    i=1
+</code></pre>
+<p><strong>Ce qu'elle mesure :</strong> la <strong>direction</strong> de l'opinion.</p>
+<p><strong>La propriété statistique clé.</strong> <code>mu</code> est une <strong>moyenne d'échantillon</strong>. Son erreur type est :</p>
+<pre><code>              écart-type des scores individuels        σ
+erreur type = ──────────────────────────────────  =  ─────
+                      racine de n                     √n
+</code></pre>
+<p><strong>C'est la formule la plus importante de tout ton mémoire.</strong> Elle explique pourquoi la première tentative
+a échoué :</p>
+<table>
+<thead>
+<tr>
+<th>Corpus</th>
+<th>n par jour</th>
+<th>Erreur type</th>
+<th>Lecture</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Ancien (Reddit 2023-2026)</td>
+<td><strong>2</strong></td>
+<td>σ/√2 ≈ <strong>0,71 σ</strong></td>
+<td><code>mu</code> est du bruit pur</td>
+</tr>
+<tr>
+<td>Nouveau (StockTwits)</td>
+<td><strong>~500</strong></td>
+<td>σ/√500 ≈ <strong>0,045 σ</strong></td>
+<td><code>mu</code> est une vraie mesure</td>
+</tr>
+</tbody>
+</table>
+<p>Le bruit est divisé par <strong>√250 ≈ 16</strong>. Avec deux messages, <code>mu</code> sautait de −1 à +1 au gré de deux tweets
+tirés au hasard, sans lien avec l'opinion réelle du marché.</p>
+<blockquote>
+<p><strong>L'analogie.</strong> Tu veux connaître la taille moyenne des Tunisiens. Tu mesures 2 personnes → ta moyenne
+peut valoir 1,55 m ou 1,90 m selon qui tu croises. Tu en mesures 500 → ta moyenne sera très proche de
+la vraie valeur. Ce n'est pas que les 500 personnes soient « meilleures » : c'est que <strong>la moyenne de
+beaucoup d'observations est stable</strong>.</p>
+</blockquote>
+<h3 id="sd-lecart-type"><code>sd</code> — l'écart-type</h3>
+<pre><code>           ┌────────────────────────────────┐
+           │    1      n                     │
+sd  =  \   │  ─────  ×  Σ  (score_i − mu)²   │
+        \  │   n−1     i=1                   │
+         \√└────────────────────────────────┘
+</code></pre>
+<p><strong>Ce qu'elle mesure :</strong> le <strong>désaccord</strong>. Est-ce que tout le monde dit la même chose, ou est-ce que la
+communauté est divisée ?</p>
+<p><strong>Sa valeur ajoutée théorique.</strong> En finance, le désaccord entre investisseurs est une variable étudiée
+depuis longtemps (Miller 1977, Diether et al. 2002). L'idée : quand les opinions divergent fortement, le
+volume d'échange augmente et la volatilité aussi. Un <code>sd</code> élevé avec <code>mu ≈ 0</code> ne veut pas dire « rien ne
+se passe » — cela veut dire « ça se bagarre ».</p>
+<p><strong>Pourquoi <code>n−1</code> et pas <code>n</code> ?</strong> C'est la <strong>correction de Bessel</strong>. Diviser par <code>n</code> sous-estime
+systématiquement la variance, parce qu'on utilise <code>mu</code> — lui-même estimé sur les mêmes données — comme
+centre. On « perd un degré de liberté ». Diviser par <code>n−1</code> rend l'estimateur <strong>non biaisé</strong>.</p>
+<h3 id="pos-et-neg-les-intensites"><code>pos</code> et <code>neg</code> — les intensités</h3>
+<pre><code>pos = moyenne des p(positif) des n messages
+neg = moyenne des p(négatif) des n messages
+</code></pre>
+<p><strong>Leur valeur ajoutée :</strong> distinguer le neutre du partagé (voir §3.2). Et permettre l'asymétrie : la
+littérature montre que les mauvaises nouvelles se propagent différemment des bonnes (Hong &amp; Stein 1999).
+Séparer <code>pos</code> et <code>neg</code> permet de tester si un coefficient diffère de l'autre.</p>
+<h3 id="p10-et-p90-les-deciles"><code>p10</code> et <code>p90</code> — les déciles</h3>
+<p><strong>Ce qu'ils mesurent :</strong> la forme des <strong>queues</strong> de la distribution.</p>
+<ul>
+<li><code>p10</code> = la valeur en dessous de laquelle se trouvent les 10 % de messages les plus négatifs</li>
+<li><code>p90</code> = la valeur au-dessus de laquelle se trouvent les 10 % les plus positifs</li>
+</ul>
+<p><strong>Pourquoi des déciles plutôt que le min et le max ?</strong> Parce que le minimum et le maximum sont <strong>fragiles</strong>
+— un seul message extrême les fait bouger. Les déciles sont des <strong>statistiques robustes</strong> : il faut
+déplacer 10 % de l'échantillon pour les changer.</p>
+<blockquote>
+<p><strong>L'analogie.</strong> Le salaire moyen d'un village change complètement si un milliardaire s'y installe. Le
+salaire médian, ou le 9ᵉ décile, ne bougent presque pas. Voilà ce qu'est la robustesse.</p>
+</blockquote>
+<h2 id="92-pourquoi-night_full-est-recalcule-sur-les-messages">9.2 — Pourquoi <code>night_full</code> est recalculé sur les messages</h2>
+<p>C'est un point <strong>mathématique</strong> important, et il fait une bonne question d'oral.</p>
+<h3 id="ce-qui-est-additif">Ce qui est additif</h3>
+<p>La moyenne d'une union <strong>se déduit</strong> des moyennes des sous-groupes, pondérées par les effectifs :</p>
+<pre><code>                  n1 × mu1  +  n2 × mu2
+mu(union)  =  ───────────────────────────      (moyenne pondérée par les effectifs)
+                      n1  +  n2
+</code></pre>
+<p>Vérifié sur tes données : erreur maximale <strong>1,67 × 10⁻¹⁶</strong>.</p>
+<h3 id="ce-qui-nest-pas-additif">Ce qui n'est PAS additif</h3>
+<p><strong>L'écart-type.</strong> La variance d'une union comporte <strong>deux termes</strong> — c'est la <strong>loi de la variance
+totale</strong> (ou décomposition de Huygens) :</p>
+<pre><code>                    n1×σ1² + n2×σ2²        n1×(mu1−mu)² + n2×(mu2−mu)²
+variance(union) = ─────────────────  +  ─────────────────────────────
+                      n1 + n2                      n1 + n2
+                  └──────┬──────┘        └───────────┬───────────┘
+                   variance INTRA              variance INTER
+              (dispersion DANS chaque      (écart ENTRE les moyennes
+                   sous-fenêtre)              des deux sous-fenêtres)
+</code></pre>
+<ul>
+<li>La <strong>variance intra</strong> = « à quel point ça varie <em>à l'intérieur</em> de chaque groupe »</li>
+<li>La <strong>variance inter</strong> = « à quel point les groupes sont <em>différents entre eux</em> »</li>
+</ul>
+<blockquote>
+<p><strong>L'analogie.</strong> Deux classes passent un examen. Classe A : moyenne 8, tous entre 7 et 9. Classe B :
+moyenne 16, tous entre 15 et 17. Dans chaque classe, la dispersion est <strong>faible</strong>. Mais si tu mélanges
+les deux classes, la dispersion devient <strong>énorme</strong> — parce que les deux moyennes sont très éloignées.
+Cette dispersion supplémentaire, c'est la variance inter.</p>
+</blockquote>
+<p><strong>Ton panel d'origine faisait l'erreur</strong> : il stockait la moyenne pondérée des écarts-types, ce qui ne
+retient que la variance intra. Sur AAPL au 2 janvier 2020 : valeur stockée <strong>0,4082</strong>, vraie valeur
+<strong>0,4098</strong>. L'écart est faible ici parce que les deux fenêtres ont des moyennes proches — mais il grandit
+précisément les nuits où le sentiment bascule entre le soir et le matin, c'est-à-dire les nuits
+intéressantes.</p>
+<p><strong>Les percentiles.</strong> Là, c'est pire : <strong>il n'existe aucune formule</strong>. On ne peut pas obtenir le 9ᵉ décile
+d'une union à partir des 9ᵉˢ déciles des sous-groupes — il faut les scores individuels.</p>
+<p>C'est pour cela que <code>disp_night_full</code> était <strong>entièrement vide</strong> dans ton ancien panel : le script tentait
+un calcul impossible, et pandas renvoyait <code>NaN</code> sans lever d'erreur.</p>
+<p><strong>La solution du notebook 03 :</strong> calculer les statistiques de <code>night_full</code> directement sur l'union des
+messages. Les trois problèmes disparaissent par construction.</p>
+<hr />
+<h1 id="chapitre-10-le-format-large-et-le-squelette">Chapitre 10 — Le format large et le squelette</h1>
+<pre><code>Squelette : 2,740 lignes (5 actions × 548 jours)
+Après fusion : 2,740 lignes x 44 colonnes
+</code></pre>
+<h2 id="pourquoi-partir-dun-squelette">Pourquoi partir d'un squelette</h2>
+<p>On construit d'abord le <strong>produit cartésien</strong> de tous les titres × tous les jours de bourse, puis on y
+attache les données. On ne part <strong>pas</strong> des messages.</p>
+<p><strong>Le problème que ça évite.</strong> Si on partait des messages, un jour où personne n'a parlé de NVDA
+<strong>disparaîtrait</strong> silencieusement du panel. Résultat : NVDA aurait 547 jours et les autres 548. Le panel
+serait déséquilibré, et le jour manquant serait invisible.</p>
+<pre><code>Jours sans aucun message nocturne, par ticker :
+  NVDA    1
+  TSLA    3
+</code></pre>
+<p>Grâce au squelette, ces 4 jours <strong>existent</strong> avec <code>n = 0</code>. On les voit, on peut décider quoi en faire.
+S'ils avaient disparu, on ne saurait même pas qu'ils ont existé.</p>
+<h2 id="la-distinction-absence-zero">La distinction absence / zéro</h2>
+<p>Une subtilité qui compte :</p>
+<table>
+<thead>
+<tr>
+<th>Cas</th>
+<th>Valeur correcte</th>
+<th>Pourquoi</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Aucun message cette nuit</td>
+<td><code>n = 0</code></td>
+<td>c'est une information : personne n'a parlé</td>
+</tr>
+<tr>
+<td>Écart-type d'un seul message</td>
+<td><code>NaN</code></td>
+<td>on ne peut pas calculer une dispersion sur 1 point</td>
+</tr>
+<tr>
+<td>Décile de zéro message</td>
+<td><code>NaN</code></td>
+<td>rien à ordonner</td>
+</tr>
+</tbody>
+</table>
+<p><strong>On ne fabrique pas une valeur qu'on ne peut pas calculer.</strong> Mettre 0 à la place d'un <code>NaN</code> reviendrait
+à affirmer « la dispersion était nulle », ce qui est faux — on ne sait pas.</p>
+<hr />
+<h1 id="chapitre-11-les-variables-de-marche">Chapitre 11 — Les variables de marché</h1>
+<h2 id="111-la-decomposition-lidee-centrale-du-memoire">11.1 — La décomposition, l'idée centrale du mémoire</h2>
+<p>Une journée boursière a <strong>deux moitiés qui n'obéissent pas aux mêmes règles</strong> :</p>
+<pre><code>   16h00 (J−1)                    9h30 (J)                     16h00 (J)
+        │                             │                             │
+        │◄──── marché FERMÉ ─────────►│◄──── marché OUVERT ────────►│
+        │        « le gap »           │        « la séance »        │
+   prev_close                      Open                         Close
+</code></pre>
+<table>
+<thead>
+<tr>
+<th>Cible</th>
+<th>Formule</th>
+<th>Ce qui s'y passe</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>gap</code></td>
+<td><code>Open / prev_close − 1</code></td>
+<td>l'information accumulée s'incorpore d'un coup à l'ouverture</td>
+</tr>
+<tr>
+<td><code>ret_oc</code></td>
+<td><code>Close / Open − 1</code></td>
+<td>des milliers d'intervenants arbitrent en continu</td>
+</tr>
+<tr>
+<td><code>ret_cc</code></td>
+<td><code>Close / prev_close − 1</code></td>
+<td>le total</td>
+</tr>
+</tbody>
+</table>
+<p><strong>L'identité qui les relie :</strong></p>
+<pre><code>( 1 + gap ) × ( 1 + ret_oc )  =  1 + ret_cc
+</code></pre>
+<p>Vérifiée sur tes données : erreur maximale <strong>2,22 × 10⁻¹⁶</strong>.</p>
+<p><strong>Pourquoi une multiplication et pas une addition ?</strong> Parce que les rendements se <strong>composent</strong>. Si une
+action passe de 100 à 110 (+10 %) puis de 110 à 121 (+10 %), le total n'est pas +20 % mais +21 % :
+1,10 × 1,10 = 1,21. Sur des petits rendements l'approximation additive est bonne, mais l'identité exacte
+est multiplicative.</p>
+<p><strong>Pourquoi cette décomposition change tout.</strong> Le sentiment nocturne prédit le gap (ρ = +0,157) et ne
+prédit pas la séance (ρ = −0,010). Si tu ne modélises que <code>ret_cc</code>, tu <strong>mélanges</strong> un morceau prévisible
+et un morceau qui est du bruit pur. Le signal se dilue.</p>
+<p><strong>C'est exactement ce qui a fait échouer ta phase 5 initiale.</strong></p>
+<h2 id="112-prev_close-le-pivot">11.2 — <code>prev_close</code> : le pivot</h2>
+<p>Ce n'est pas un rendement, c'est une <strong>référence</strong>. Sans elle, aucun gap n'est calculable.</p>
+<p>C'est aussi la <strong>seule colonne de prix légalement utilisable</strong> comme variable explicative :
+<code>Open</code>, <code>High</code>, <code>Low</code>, <code>Close</code> du jour J contiennent la réponse qu'on cherche.</p>
+<h2 id="113-vol_20d-la-volatilite-realisee">11.3 — <code>vol_20d</code> : la volatilité réalisée</h2>
+<pre><code>vol_20d(t) = écart-type des rendements ret_cc des 20 jours PRÉCÉDENTS
+
+             c'est-à-dire  ret_cc(t−1), ret_cc(t−2), ..., ret_cc(t−20)
+             et surtout PAS ret_cc(t)
+</code></pre>
+<p><strong>Ce qu'elle mesure :</strong> le <strong>régime de risque</strong>. Un titre agité ces dernières semaines a de fortes chances
+de le rester.</p>
+<p><strong>La propriété qui la rend utile : le regroupement de volatilité</strong> (<em>volatility clustering</em>). Observé par
+Mandelbrot en 1963, il n'a jamais disparu :</p>
+<blockquote>
+<p>« Les grands changements tendent à être suivis de grands changements — de l'un ou l'autre signe — et les
+petits changements par de petits changements. »</p>
+</blockquote>
+<p>C'est le fondement de toute la famille des modèles <strong>ARCH/GARCH</strong> (Engle 1982, prix Nobel 2003). Et c'est
+pourquoi la volatilité <strong>se prédit</strong> (R² de 0,3 à 0,6) alors que la direction ne se prédit presque pas
+(R² de 0,001 à 0,01).</p>
+<blockquote>
+<p><strong>Le <code>.shift(1)</code> est obligatoire.</strong> La fenêtre doit couvrir les 20 jours <strong>précédents</strong>, pas les 20
+jours <strong>incluant aujourd'hui</strong>. Sinon on utilise l'information du jour pour prédire le jour : c'est la
+fuite la plus fréquente et la plus discrète en finance quantitative.</p>
+<p>En pandas : <code>s.shift(1).rolling(20).std()</code> et <strong>jamais</strong> <code>s.rolling(20).std()</code>.</p>
+</blockquote>
+<h2 id="114-le-recoupement-avec-ton-script-de-collecte">11.4 — Le recoupement avec ton script de collecte</h2>
+<pre><code>prev_close   : écart max = 0.00e+00   -&gt; identique
+gap          : écart max = 5.33e-16   -&gt; identique
+ret_oc       : écart max = 7.77e-16   -&gt; identique
+ret_cc       : écart max = 5.43e-16   -&gt; identique
+</code></pre>
+<p><strong>L'idée du test.</strong> Ton fichier contient déjà ces colonnes, calculées par ton script de collecte. Le
+notebook les recalcule et <strong>compare</strong>.</p>
+<p><strong>Ce que ça prouve.</strong> Deux implémentations indépendantes, écrites à des moments différents, donnent le
+même résultat à la précision machine près. C'est de la <strong>validation croisée d'implémentation</strong> — la même
+logique que la double saisie en comptabilité.</p>
+<p>Un écart non nul signalerait un <code>groupby</code> oublié ou un tri différent — le genre d'erreur silencieuse qui
+empoisonne un projet entier.</p>
+<hr />
+<h1 id="chapitre-12-la-fusion">Chapitre 12 — La fusion</h1>
+<pre><code class="language-python">pan = fin[COLS_FIN].merge(panel, on=[&quot;Ticker&quot;, &quot;Date&quot;], how=&quot;left&quot;)
+</code></pre>
+<h2 id="pourquoi-une-jointure-a-gauche-en-partant-du-marche">Pourquoi une jointure « à gauche » en partant du marché</h2>
+<p>Une jointure <strong>à gauche</strong> (<code>how="left"</code>) garde <strong>toutes</strong> les lignes de la table de gauche (les prix) et
+attache les correspondances de droite (le sentiment) quand elles existent.</p>
+<p><strong>Pourquoi partir du marché et pas du texte ?</strong></p>
+<table>
+<thead>
+<tr>
+<th>On part de…</th>
+<th>Conséquence</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Marché</strong> ✅</td>
+<td>on garde tous les jours de bourse ; un jour sans message a <code>n = 0</code></td>
+</tr>
+<tr>
+<td>Texte ❌</td>
+<td>on garderait les week-ends (pas de prix → cible impossible) et on perdrait les jours de bourse muets</td>
+</tr>
+</tbody>
+</table>
+<p>La <strong>cible</strong> n'existe que les jours de bourse. Il est donc logique que la table des cibles définisse le
+périmètre.</p>
+<pre><code>Panel fusionné : 2,740 lignes x 56 colonnes
+Panel équilibré : True
+</code></pre>
+<hr />
+<h1 id="chapitre-13-les-variables-dattention">Chapitre 13 — Les variables d'attention</h1>
+<p>Trois transformations du comptage de messages. Elles servent au modèle de <strong>risque</strong>, pas au modèle de
+direction.</p>
+<h2 id="131-nlog-passer-au-logarithme">13.1 — <code>nlog</code> : passer au logarithme</h2>
+<pre><code>nlog = logarithme népérien de (1 + n)        noté  ln(1 + n)
+</code></pre>
+<p><strong>Le problème.</strong> La distribution de <code>n</code> est <strong>très asymétrique</strong> :</p>
+<table>
+<thead>
+<tr>
+<th>Ticker</th>
+<th>médiane</th>
+<th>moyenne</th>
+<th>maximum</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>AAPL</td>
+<td>571</td>
+<td>775</td>
+<td><strong>6 898</strong></td>
+</tr>
+<tr>
+<td>TSLA</td>
+<td>1 138</td>
+<td>1 605</td>
+<td><strong>16 722</strong></td>
+</tr>
+<tr>
+<td>META</td>
+<td>108</td>
+<td>217</td>
+<td><strong>12 337</strong></td>
+</tr>
+</tbody>
+</table>
+<p>Regarde META : médiane 108, maximum 12 337 — un facteur <strong>114</strong>. La moyenne (217) est le double de la
+médiane : signature classique d'une distribution <strong>log-normale</strong>.</p>
+<p><strong>Pourquoi c'est un problème pour un modèle.</strong> Une régression linéaire minimise la somme des <strong>carrés</strong>
+des erreurs. Une observation à 12 337 pèse (12 337/108)² ≈ <strong>13 000 fois</strong> plus qu'une observation
+médiane. Le modèle serait entièrement déterminé par une poignée de jours extrêmes.</p>
+<p><strong>Ce que fait le logarithme.</strong> Il transforme les rapports en différences :</p>
+<table>
+<thead>
+<tr>
+<th>n</th>
+<th>ln(1+n)</th>
+<th>interprétation</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>100</td>
+<td>4,6</td>
+<td></td>
+</tr>
+<tr>
+<td>1 000</td>
+<td>6,9</td>
+<td>+2,3</td>
+</tr>
+<tr>
+<td>10 000</td>
+<td>9,2</td>
+<td>+2,3</td>
+</tr>
+</tbody>
+</table>
+<p>Chaque <strong>multiplication par 10</strong> ajoute la même quantité. La distribution devient à peu près symétrique et
+le modèle traite les observations équitablement.</p>
+<p><strong>Pourquoi <code>1 + n</code> et pas <code>n</code> ?</strong> Parce que <code>ln(0)</code> vaut −∞. Le <code>+1</code> gère les 4 nuits sans message.</p>
+<h2 id="132-nabn-lattention-anormale">13.2 — <code>nabn</code> : l'attention anormale</h2>
+<pre><code>nabn(t) = nlog(t) − moyenne( nlog(t−1), nlog(t−2), ..., nlog(t−20) )
+          └──────┘   └──────────────────────────────────────────────┘
+          aujourd'hui              la « normale » des 20 jours passés
+</code></pre>
+<p><strong>C'est la variable la plus intéressante du panel</strong> pour un mémoire d'actuariat.</p>
+<p><strong>L'idée.</strong> <code>nlog</code> mesure « combien on parle ». <code>nabn</code> mesure <strong>« combien on parle <em>par rapport à
+d'habitude</em> »</strong>.</p>
+<blockquote>
+<p><strong>L'analogie.</strong> Un restaurant a 200 clients ce soir. Est-ce beaucoup ? Impossible à dire dans l'absolu.
+Si sa moyenne est de 50, c'est un événement exceptionnel. Si sa moyenne est de 400, c'est une soirée
+catastrophique. <strong>Le niveau seul n'informe pas ; l'écart à la normale, si.</strong></p>
+</blockquote>
+<p><strong>Pourquoi cette variable prédit le risque.</strong> Un pic d'attention signale l'arrivée d'une information
+nouvelle et importante : résultats trimestriels, annonce réglementaire, tweet d'Elon Musk. Et une
+information importante produit un mouvement de prix important — quelle qu'en soit la direction.</p>
+<p>C'est documenté : <strong>Da, Engelberg &amp; Gao (2011)</strong> sur Google Trends, <strong>Antweiler &amp; Frank (2004)</strong> sur les
+forums boursiers.</p>
+<p><strong>Sur tes données</strong> (notebook 07) : ajouter <code>nabn</code> à un modèle de volatilité fait passer le R² hors
+échantillon de <strong>0,495 à 0,527</strong>. Le test de Fisher donne F = 38,4 avec p = 5 × 10⁻³⁸. Petit en valeur
+absolue, mais massivement significatif — parce que la référence est déjà très bonne.</p>
+<blockquote>
+<h3 id="le-bug-corrige-et-pourquoi-il-compte">Le bug corrigé, et pourquoi il compte</h3>
+<p>Dans ton ancien panel, la référence divisait par 20 <strong>même quand moins de 20 jours étaient
+disponibles</strong>. Le premier jour, la moyenne des « 20 jours précédents » valait donc 0/20 = 0, et
+<code>nabn = nlog = 5,76</code> au lieu de ~0.</p>
+<p><code>Ancien panel : nabn moyen fortement POSITIF, nabn ≈ 5,8 au jour 1
+Nouveau      : nabn moyen = -0.0059   (attendu : ~0)  ✓</code></p>
+<p>Le correctif est <code>min_periods=10</code> : on divise par le nombre <strong>réel</strong> d'observations, et on laisse <code>NaN</code>
+tant qu'il n'y en a pas assez. <strong>Un vide honnête vaut mieux qu'un chiffre faux</strong> — un <code>NaN</code> est visible
+et se traite ; une valeur fausse se propage silencieusement.</p>
+</blockquote>
+<h2 id="133-disp-la-dispersion-robuste">13.3 — <code>disp</code> : la dispersion robuste</h2>
+<pre><code>disp = p90 − p10           (l'intervalle interdécile : la largeur des 80 % centraux)
+</code></pre>
+<p><strong>Ce qu'elle mesure :</strong> la largeur du <strong>cœur</strong> de la distribution des opinions — l'intervalle interdécile.</p>
+<p><strong>Pourquoi pas l'écart-type ?</strong> Les deux mesurent la dispersion, mais différemment :</p>
+<table>
+<thead>
+<tr>
+<th>Mesure</th>
+<th>Sensibilité aux extrêmes</th>
+<th>Interprétation</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>écart-type</td>
+<td><strong>forte</strong> (les écarts sont au carré)</td>
+<td>dispersion moyenne</td>
+</tr>
+<tr>
+<td>p90 − p10</td>
+<td><strong>faible</strong></td>
+<td>largeur du cœur, 80 % central</td>
+</tr>
+</tbody>
+</table>
+<p>Sur des scores FinBERT très polarisés (beaucoup de valeurs à −1, 0 et +1), l'écart-type peut être trompé
+par quelques messages extrêmes. La <code>disp</code> décrit mieux « à quel point la communauté typique est divisée ».</p>
+<p><strong>Avoir les deux est un avantage :</strong> si <code>sd</code> est élevé mais <code>disp</code> faible, cela signifie que la dispersion
+vient de quelques messages extrêmes, pas d'un désaccord général. Un modèle peut exploiter cette
+différence.</p>
+<hr />
+<h1 id="chapitre-14-les-derivees-nocturnes">Chapitre 14 — Les dérivées nocturnes</h1>
+<p>Trois façons de répondre à la question <strong>« ce sentiment est-il élevé ? »</strong>.</p>
+<h2 id="141-dmu_night-la-variation">14.1 — <code>dmu_night</code> : la variation</h2>
+<pre><code>dmu_night(t) = mu(t) − mu(t−1)          (la variation d'un jour à l'autre)
+</code></pre>
+<p><strong>Ce qu'elle capte :</strong> le <strong>changement d'humeur</strong> plutôt que le niveau.</p>
+<p><strong>Pourquoi c'est différent du niveau.</strong> En finance, ce qui bouge les prix, ce n'est pas l'information
+elle-même — c'est la <strong>surprise</strong>, l'écart entre l'information et ce qui était attendu. Une communauté
+durablement optimiste n'apprend rien de nouveau au marché ; une communauté qui passe brutalement de
+négative à neutre, si.</p>
+<p>C'est le même principe que les « surprises de résultats » : ce n'est pas le bénéfice publié qui fait
+bouger l'action, c'est l'écart au consensus.</p>
+<h2 id="142-mu_night_ma3-le-lissage">14.2 — <code>mu_night_ma3</code> : le lissage</h2>
+<pre><code>              mu(t) + mu(t−1) + mu(t−2)
+MA3(t)  =  ──────────────────────────────
+                         3
+</code></pre>
+<p><strong>Ce qu'elle fait :</strong> réduire le bruit. Une seule nuit peut être atypique ; trois nuits consécutives, plus
+rarement.</p>
+<p><strong>Le compromis à comprendre.</strong> Toute moyenne mobile arbitre entre :</p>
+<ul>
+<li><strong>fenêtre courte</strong> → réactive, mais bruitée</li>
+<li><strong>fenêtre longue</strong> → stable, mais en retard</li>
+</ul>
+<p>Trois jours est un compromis : assez pour lisser un accident, assez court pour rester réactif.</p>
+<blockquote>
+<p><strong>Un point à savoir défendre.</strong> Cette moyenne <strong>inclut</strong> le jour J. Ce n'est <strong>pas</strong> une fuite ici,
+parce que <code>mu_night_full(J)</code> est connu à 9h30, avant que le gap ne soit observé. Mais la même
+construction appliquée à une variable de <strong>prix</strong> serait une faute grave. Il faut savoir expliquer
+pourquoi c'est légitime dans un cas et pas dans l'autre.</p>
+</blockquote>
+<h2 id="143-mu_night_z20-la-normalisation-la-plus-importante">14.3 — <code>mu_night_z20</code> : la normalisation — la plus importante</h2>
+<pre><code>              mu(t)  −  moyenne des 20 valeurs PRÉCÉDENTES
+z(t)  =  ──────────────────────────────────────────────────────
+            écart-type des 20 valeurs PRÉCÉDENTES
+</code></pre>
+<h3 id="le-probleme-quelle-resout">Le problème qu'elle résout</h3>
+<pre><code>Moyenne de mu_night_full par ticker :
+  NVDA    0.1627
+  AMZN    0.1170
+  META    0.1139
+  AAPL    0.0945
+  TSLA    0.0449      &lt;- 3,6 fois moins que NVDA
+</code></pre>
+<p><strong>Est-ce que la foule aime 3,6 fois plus NVDA que TSLA ?</strong> Non. Cela veut dire que les deux communautés
+<strong>écrivent différemment</strong>. Les messages TSLA sont plus polémiques, plus chargés en vocabulaire que FinBERT
+classe en négatif ; ceux de NVDA sont plus techniques et enthousiastes.</p>
+<p><strong>La conséquence.</strong> Un sentiment de 0,12 est :</p>
+<ul>
+<li><strong>médiocre</strong> pour NVDA (sous sa moyenne de 0,16)</li>
+<li><strong>exceptionnel</strong> pour TSLA (0,12 − 0,045) / 0,032 ≈ <strong>+2,3 écarts-types</strong></li>
+</ul>
+<p>La valeur brute ne veut <strong>rien dire</strong> hors contexte.</p>
+<h3 id="ce-qui-se-passe-si-on-ne-normalise-pas">Ce qui se passe si on ne normalise pas</h3>
+<p>Le modèle apprend surtout <strong>l'identité du titre</strong> : « quand <code>mu</code> est élevé, c'est probablement NVDA, et
+NVDA a beaucoup monté en 2020-2021 ». Il ne mesure pas un signal — il mémorise que NVDA a monté. Cela ne
+se généralisera à aucun autre titre, ni à aucune autre période.</p>
+<h3 id="ce-que-fait-le-z-score">Ce que fait le z-score</h3>
+<p>Après normalisation :</p>
+<pre><code>Moyenne de mu_night_z20 par ticker :
+  AAPL   -0.0130
+  AMZN   -0.0299
+  META   -0.0485
+  NVDA   -0.0367
+  TSLA   -0.0212
+</code></pre>
+<p>Tous à ~0. <strong>Les écarts de niveau ont disparu.</strong> Désormais <code>z = +2</code> signifie partout la même chose :
+<em>« sentiment anormalement positif pour ce titre, comparé à son propre mois écoulé »</em>.</p>
+<p>C'est <strong>cela</strong>, le vrai signal — et c'est comparable d'un titre à l'autre.</p>
+<h3 id="pourquoi-une-fenetre-glissante-et-non-une-moyenne-globale">Pourquoi une fenêtre glissante et non une moyenne globale</h3>
+<p>Une moyenne calculée sur toute la période 2020-2022 utiliserait des données de 2022 pour normaliser des
+jours de 2020 : <strong>une fuite d'information venue du futur</strong>.</p>
+<p>La fenêtre glissante n'utilise que le passé, et elle a un second avantage : elle <strong>s'adapte aux
+changements de régime</strong>. Le niveau de bavardage sur TSLA en mars 2020 (panique COVID) n'a rien à voir avec
+celui de janvier 2022.</p>
+<h3 id="le-detail-qui-fait-tout-le-shift1">Le détail qui fait tout : le <code>.shift(1)</code></h3>
+<p>Sans lui, la fenêtre de 20 jours <strong>inclurait le jour J</strong>. On normaliserait <code>x_t</code> par une moyenne qui
+contient déjà <code>x_t</code>. L'effet est faible mais systématique, et il gonfle artificiellement toutes les
+performances.</p>
+<blockquote>
+<p><strong>C'est l'erreur n° 1 en finance quantitative appliquée.</strong> Retiens la règle : <em>toute fenêtre glissante
+utilisée comme variable explicative doit être décalée d'au moins un pas.</em></p>
+</blockquote>
+<h3 id="pourquoi-106-valeurs-manquantes">Pourquoi 106 valeurs manquantes</h3>
+<p>Il faut 20 jours d'historique pour calculer moyenne et écart-type. Les ~21 premiers jours de chaque titre
+sont donc <code>NaN</code>. C'est normal — et c'est le prix de l'honnêteté.</p>
+<hr />
+<h1 id="chapitre-15-les-decalees-et-les-cibles">Chapitre 15 — Les décalées et les cibles</h1>
+<h2 id="151-les-six-colonnes-_lag1-recuperer-linformation-interdite">15.1 — Les six colonnes <code>_lag1</code> : récupérer l'information interdite</h2>
+<p>Les fenêtres <code>mkt</code> et <code>post</code> sont <strong>interdites</strong> pour le jour J : elles se ferment après l'ouverture, donc
+elles réagissent au prix au lieu de l'annoncer.</p>
+<p>Mais celles du <strong>jour J−1</strong> sont parfaitement connues à 16h00 la veille — donc parfaitement légales.</p>
+<p><strong>Deux usages :</strong></p>
+<ol>
+<li><strong>Décrire le climat de la veille.</strong> Une séance où la communauté a été très active et négative annonce
+   peut-être une nuit agitée.</li>
+<li><strong>Servir de contrôle.</strong> Si le sentiment nocturne garde son pouvoir prédictif <strong>une fois le sentiment
+   de la veille pris en compte</strong>, c'est bien l'information <em>nouvelle</em> de la nuit qui compte, et non un
+   prolongement de la journée passée.</li>
+</ol>
+<p>Ce second usage est un raisonnement de <strong>variable de contrôle</strong>, central en économétrie : pour affirmer
+que X cause Y, il faut montrer que l'effet subsiste après avoir neutralisé les explications alternatives.</p>
+<h2 id="152-les-cibles-binaires">15.2 — Les cibles binaires</h2>
+<pre><code>y_gap = 1  si gap &gt; 0
+y_gap = 0  sinon
+</code></pre>
+<pre><code>y_gap       : 0.589
+y_oc        : 0.505
+y_cc        : 0.534
+</code></pre>
+<h3 id="le-piege-du-taux-de-base">Le piège du taux de base</h3>
+<p><strong>58,9 % des jours ont un gap positif.</strong> Ce n'est pas 50 %.</p>
+<p><strong>Conséquence immédiate :</strong> un modèle qui répondrait « hausse » <strong>tous les jours</strong>, sans regarder aucune
+donnée, obtiendrait <strong>58,9 % d'exactitude</strong>.</p>
+<p>Si ton modèle affiche 60 %, il n'a presque rien appris — pourtant le chiffre paraît respectable. C'est le
+piège dans lequel tombe la majorité des travaux sur la prédiction boursière.</p>
+<p><strong>C'est pourquoi le mémoire reporte l'AUC et le MCC</strong>, pas l'exactitude :</p>
+<table>
+<thead>
+<tr>
+<th>Métrique</th>
+<th>Ce qu'elle mesure</th>
+<th>Valeur si aucune information</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>AUC</strong></td>
+<td>probabilité qu'un jour de hausse tiré au hasard reçoive un score supérieur à un jour de baisse</td>
+<td><strong>0,50</strong> toujours</td>
+</tr>
+<tr>
+<td><strong>MCC</strong></td>
+<td>corrélation entre prédictions et réalité, robuste au déséquilibre</td>
+<td><strong>0,00</strong></td>
+</tr>
+<tr>
+<td>Exactitude</td>
+<td>% de bonnes réponses</td>
+<td><strong>58,9 %</strong> ici (trompeur)</td>
+</tr>
+</tbody>
+</table>
+<p>L'AUC vaut 0,50 en l'absence d'information <strong>quel que soit le taux de base</strong>. C'est ce qui la rend
+comparable entre problèmes.</p>
+<h3 id="pourquoi-le-taux-de-base-est-de-589">Pourquoi le taux de base est de 58,9 %</h3>
+<p>Deux raisons :</p>
+<ol>
+<li><strong>Le marché monte plus souvent qu'il ne baisse</strong> — c'est la prime de risque actions.</li>
+<li><strong>La prime overnight</strong> : sur cette période, une part importante du rendement s'est formée pendant la
+   nuit. TSLA gagnait en moyenne <strong>+0,40 % chaque nuit</strong>.</li>
+</ol>
+<p>Ce second point est important pour le backtest : <strong>une stratégie qui achèterait tous les soirs sans rien
+prédire capterait déjà cette prime</strong>. Le modèle doit donc être comparé à cette référence, et pas seulement
+au buy &amp; hold.</p>
+<h2 id="153-y_gap_net-la-zone-morte">15.3 — <code>y_gap_net</code> : la zone morte</h2>
+<pre><code>y_gap_net = 1          si gap &gt; +15 bp   (+0,15 %)
+y_gap_net = 0          si gap &lt; −15 bp   (−0,15 %)
+y_gap_net = indéfini   sinon              -&gt; le jour est NEUTRALISÉ
+</code></pre>
+<p><strong>Le problème.</strong> Un « point de base » (bp) vaut 0,01 %. Un gap de +0,013 % donne <code>y_gap = 1</code> — « hausse » —
+alors que ce mouvement est <strong>plusieurs fois plus petit que les frais de transaction</strong>.</p>
+<p>Le modèle est donc noté sur des jours qu'il serait impossible de trader.</p>
+<p><strong>La solution.</strong> On neutralise les jours où <code>|gap| &lt; 15 bp</code> :</p>
+<pre><code>Jours neutralisés : 382 (13.9 %)
+y_gap_net : 0.599 (n = 2 358)
+</code></pre>
+<p><strong>Ce que ça change.</strong> Le modèle n'est plus évalué que sur les mouvements <strong>économiquement significatifs</strong>.
+C'est le passage d'une évaluation <strong>statistique</strong> à une évaluation <strong>décisionnelle</strong> — un réflexe
+d'actuaire : ce qui compte n'est pas d'avoir raison, c'est d'avoir raison <strong>là où ça change quelque
+chose</strong>.</p>
+<hr />
+<h1 id="chapitre-16-les-sept-controles-qualite">Chapitre 16 — Les sept contrôles qualité</h1>
+<pre><code>[OK] Panel équilibré  — 548 jours par ticker
+[OK] Aucun doublon (Ticker, Date)
+[OK] (1+gap)(1+ret_oc) = 1+ret_cc  — erreur max 2.22e-16
+[OK] mu = pos - neg sur toutes les fenêtres  — erreur max 1.11e-16
+[OK] n_night_full = n_overnight + n_pre  — erreur max 0.00e+00
+[OK] nabn centré sur zéro  — moyenne -0.0059
+[OK] disp_night_full calculable  — 99.9% de lignes renseignées
+TOUS LES CONTRÔLES PASSENT.
+</code></pre>
+<h2 id="pourquoi-bloquer-lexport-si-un-test-echoue">Pourquoi bloquer l'export si un test échoue</h2>
+<pre><code class="language-python">if echecs:
+    print(&quot;Export ANNULÉ : corrige les contrôles en échec d'abord.&quot;)
+</code></pre>
+<p><strong>Mieux vaut pas de fichier qu'un fichier faux.</strong> Un fichier faux se propage : tu construis dessus, tu
+tires des conclusions, tu rédiges — et tu découvres l'erreur trois semaines plus tard. Un fichier absent
+t'arrête immédiatement.</p>
+<p>C'est le principe <strong><em>fail fast</em></strong> : mieux vaut échouer tôt et bruyamment que tard et silencieusement.</p>
+<h2 id="ce-que-teste-chaque-controle">Ce que teste chaque contrôle</h2>
+<table>
+<thead>
+<tr>
+<th>#</th>
+<th>Contrôle</th>
+<th>Ce qu'il attraperait</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1</td>
+<td>Panel équilibré</td>
+<td>un trou dans les prix, un ticker mal filtré</td>
+</tr>
+<tr>
+<td>2</td>
+<td>Pas de doublon</td>
+<td>une jointure qui a dupliqué des lignes</td>
+</tr>
+<tr>
+<td>3</td>
+<td>Identité de décomposition</td>
+<td>une erreur de formule sur les rendements</td>
+</tr>
+<tr>
+<td>4</td>
+<td><code>mu = pos − neg</code></td>
+<td>une agrégation incohérente</td>
+</tr>
+<tr>
+<td>5</td>
+<td>Additivité des comptages</td>
+<td>une mauvaise affectation aux fenêtres</td>
+</tr>
+<tr>
+<td>6</td>
+<td><code>nabn</code> centré</td>
+<td>le bug de dénominateur</td>
+</tr>
+<tr>
+<td>7</td>
+<td><code>disp</code> calculable</td>
+<td>des percentiles manquants</td>
+</tr>
+</tbody>
+</table>
+<h2 id="la-notion-de-test-a-seuil-vs-test-binaire">La notion de test à seuil vs test binaire</h2>
+<p>Deux types de contrôles cohabitent :</p>
+<ul>
+<li><strong>Binaires</strong> (1, 2, 5) : ça passe ou ça ne passe pas. Aucune tolérance.</li>
+<li><strong>À seuil</strong> (3, 4, 6, 7) : on accepte une erreur en dessous d'une limite.</li>
+</ul>
+<p>Pour les tests à seuil, la limite (<code>&lt; 1e-9</code>) n'est pas arbitraire. Les nombres à virgule flottante en
+double précision ont environ <strong>16 chiffres significatifs</strong> ; une suite d'opérations accumule donc une
+erreur de l'ordre de 10⁻¹⁵. Un seuil de 10⁻⁹ laisse six ordres de grandeur de marge : assez pour tolérer
+l'arrondi machine, assez strict pour attraper une vraie erreur de formule.</p>
+<p><strong>Tes erreurs sont de l'ordre de 2 × 10⁻¹⁶</strong> — la précision machine exactement. Les formules sont
+mathématiquement exactes.</p>
+<hr />
+<h1 id="chapitre-17-recapitulatif-les-10-idees-a-retenir">Chapitre 17 — Récapitulatif : les 10 idées à retenir</h1>
+<table>
+<thead>
+<tr>
+<th>#</th>
+<th>Idée</th>
+<th>Où elle sert</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>1</strong></td>
+<td><strong>L'erreur type d'une moyenne décroît en <code>1/√n</code>.</strong> C'est pourquoi 500 messages/nuit valent infiniment mieux que 2.</td>
+<td>ch. 9 — justifie tout le changement de corpus</td>
+</tr>
+<tr>
+<td><strong>2</strong></td>
+<td><strong>Une variable n'est utilisable que si elle est connue avant que la cible ne se forme.</strong></td>
+<td>partout — c'est la règle du projet</td>
+</tr>
+<tr>
+<td><strong>3</strong></td>
+<td><strong>Toute fenêtre glissante doit être décalée d'un pas</strong> (<code>.shift(1)</code>).</td>
+<td>ch. 11, 14 — l'erreur n° 1 en finance quantitative</td>
+</tr>
+<tr>
+<td><strong>4</strong></td>
+<td><strong>Le rendement quotidien se décompose en gap × séance</strong>, et les deux n'obéissent pas aux mêmes règles.</td>
+<td>ch. 11 — l'idée centrale du mémoire</td>
+</tr>
+<tr>
+<td><strong>5</strong></td>
+<td><strong>Les moyennes s'additionnent, la dispersion et les percentiles non</strong> (loi de la variance totale).</td>
+<td>ch. 9 — corrige deux bugs du panel</td>
+</tr>
+<tr>
+<td><strong>6</strong></td>
+<td><strong><code>mu = pos − neg</code> est une identité exacte</strong> → colinéarité parfaite si on met les trois ensemble.</td>
+<td>ch. 3 — explique les VIF absurdes du nb 06</td>
+</tr>
+<tr>
+<td><strong>7</strong></td>
+<td><strong>Le niveau brut n'informe pas ; l'écart à la normale, si.</strong> D'où le z-score et <code>nabn</code>.</td>
+<td>ch. 13, 14</td>
+</tr>
+<tr>
+<td><strong>8</strong></td>
+<td><strong>Une distribution asymétrique se transforme en log</strong> avant tout modèle linéaire.</td>
+<td>ch. 13</td>
+</tr>
+<tr>
+<td><strong>9</strong></td>
+<td><strong>Le taux de base rend l'exactitude trompeuse</strong> → utiliser l'AUC et le MCC.</td>
+<td>ch. 15</td>
+</tr>
+<tr>
+<td><strong>10</strong></td>
+<td><strong>Ne jamais faire confiance à un calcul complexe sans le vérifier par un chemin indépendant.</strong></td>
+<td>ch. 8, 11, 16</td>
+</tr>
+</tbody>
+</table>
+<h2 id="les-cinq-phrases-a-savoir-dire-en-soutenance">Les cinq phrases à savoir dire en soutenance</h2>
+<ol>
+<li>
+<p>« Le panel est construit en rattachant chaque message à un jour de bourse et à une phase de la journée,
+   après vérification que les horodatages sont en heure de New York — vérification faite <strong>sur les
+   données</strong>, par le profil horaire d'activité. »</p>
+</li>
+<li>
+<p>« Le calendrier de bourse est déduit des cotations elles-mêmes, ce qui gère automatiquement week-ends,
+   fériés et fermetures exceptionnelles. »</p>
+</li>
+<li>
+<p>« La fenêtre nocturne part de la clôture du <strong>jour de bourse</strong> précédent, si bien que celle du lundi
+   couvre l'ensemble du week-end — ce que confirme un volume 1,81 fois supérieur aux autres jours. »</p>
+</li>
+<li>
+<p>« Les statistiques de dispersion sont calculées directement sur les messages, et non recombinées à
+   partir des sous-fenêtres, parce que ni les écarts-types ni les percentiles ne sont additifs. »</p>
+</li>
+<li>
+<p>« Sept contrôles automatiques bloquent l'export en cas d'échec ; les identités comptables sont
+   vérifiées à la précision machine (2 × 10⁻¹⁶). »</p>
+</li>
+</ol>
+<hr />
+<h2 id="references">Références</h2>
+<ul>
+<li>Mandelbrot, B. (1963). <em>The Variation of Certain Speculative Prices</em>. Journal of Business. — regroupement de volatilité</li>
+<li>Miller, E. (1977). <em>Risk, Uncertainty, and Divergence of Opinion</em>. Journal of Finance. — le désaccord</li>
+<li>Engle, R. (1982). <em>Autoregressive Conditional Heteroscedasticity</em>. Econometrica. — modèles ARCH</li>
+<li>Hong, H. &amp; Stein, J. (1999). <em>A Unified Theory of Underreaction…</em>. Journal of Finance. — asymétrie des nouvelles</li>
+<li>Antweiler, W. &amp; Frank, M. (2004). <em>Is All That Talk Just Noise?</em>. Journal of Finance. — forums boursiers</li>
+<li>Da, Z., Engelberg, J. &amp; Gao, P. (2011). <em>In Search of Attention</em>. Journal of Finance. — chocs d'attention</li>
+<li>López de Prado, M. (2018). <em>Advances in Financial Machine Learning</em>. Wiley. — fuites et validation</li>
+</ul>
+<hr />
+<p><em>Prochain cours : notebook 04 — l'analyse exploratoire, les corrélations, les quintiles et les tests
+statistiques.</em></p>
+</div></body></html>

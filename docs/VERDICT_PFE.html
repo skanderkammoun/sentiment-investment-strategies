@@ -1,0 +1,631 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Le verdict des sept notebooks</title>
+<style>
+*,*::before,*::after{box-sizing:border-box}
+img{max-width:100%}
+
+:root{
+  --paper:#eef1f4; --surface:#ffffff; --surface-2:#f5f8fa; --sunken:#e4eaef;
+  --ink:#131b24; --ink-2:#37475a; --muted:#66788a; --line:#d3dbe3; --line-2:#c0cbd6;
+  --nuit:#1b4f72; --nuit-soft:#e2edf5; --nuit-ink:#123853;
+  --jour:#96602c; --jour-soft:#f6ece1; --jour-ink:#7a4d21;
+  --ok:#2c6549; --ok-soft:#e3efe8; --bad:#9c3b33; --bad-soft:#f8e8e6;
+  --warn:#8a6a1f; --warn-soft:#f7f0dd;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --paper:#0d1218; --surface:#141c25; --surface-2:#19232e; --sunken:#101820;
+    --ink:#e6edf4; --ink-2:#b7c5d2; --muted:#8296a8; --line:#28343f; --line-2:#33424f;
+    --nuit:#7fb8dd; --nuit-soft:#14303f; --nuit-ink:#a8d2ee;
+    --jour:#d79f6a; --jour-soft:#2f2418; --jour-ink:#e6bb8e;
+    --ok:#68bd95; --ok-soft:#152a20; --bad:#e08279; --bad-soft:#2e1a18;
+    --warn:#d6b768; --warn-soft:#2c2617;
+  }
+}
+:root[data-theme="dark"]{
+  --paper:#0d1218; --surface:#141c25; --surface-2:#19232e; --sunken:#101820;
+  --ink:#e6edf4; --ink-2:#b7c5d2; --muted:#8296a8; --line:#28343f; --line-2:#33424f;
+  --nuit:#7fb8dd; --nuit-soft:#14303f; --nuit-ink:#a8d2ee;
+  --jour:#d79f6a; --jour-soft:#2f2418; --jour-ink:#e6bb8e;
+  --ok:#68bd95; --ok-soft:#152a20; --bad:#e08279; --bad-soft:#2e1a18;
+  --warn:#d6b768; --warn-soft:#2c2617;
+}
+
+*{box-sizing:border-box}
+body{background:var(--paper); color:var(--ink);
+  font-family:system-ui,-apple-system,"Segoe UI",sans-serif;
+  font-size:16px; line-height:1.62; margin:0; -webkit-font-smoothing:antialiased}
+.wrap{max-width:1180px; margin:0 auto; padding:0 24px 96px;
+  display:grid; grid-template-columns:1fr; gap:0}
+@media (min-width:1080px){.wrap{grid-template-columns:214px minmax(0,1fr); gap:56px; align-items:start}}
+
+header{grid-column:1/-1; padding:60px 0 38px; border-bottom:1px solid var(--line)}
+.eyebrow{font-family:Consolas,"Cascadia Mono","Courier New",monospace; font-size:12px; letter-spacing:.14em;
+  text-transform:uppercase; color:var(--muted); margin:0 0 14px}
+h1{font-family:"Iowan Old Style",Georgia,"Times New Roman",serif; font-weight:600; font-size:clamp(34px,5vw,52px);
+  line-height:1.1; letter-spacing:-.015em; margin:0 0 18px; text-wrap:balance}
+.lede{font-size:18px; color:var(--ink-2); max-width:64ch; margin:0 0 26px}
+.facts{display:flex; flex-wrap:wrap; gap:0; border:1px solid var(--line); border-radius:3px;
+  overflow:hidden; background:var(--surface); width:fit-content; max-width:100%}
+.fact{padding:12px 22px; border-right:1px solid var(--line)}
+.fact:last-child{border-right:0}
+.fact b{display:block; font-family:Consolas,"Cascadia Mono","Courier New",monospace; font-size:19px;
+  font-variant-numeric:tabular-nums}
+.fact.g b{color:var(--ok)} .fact.r b{color:var(--bad)} .fact.n b{color:var(--nuit)}
+.fact span{font-size:12px; color:var(--muted)}
+
+nav{display:none}
+@media (min-width:1080px){
+  nav{display:block; position:sticky; top:28px; padding-top:44px; font-size:13.5px}
+  nav p{font-family:Consolas,"Cascadia Mono","Courier New",monospace; font-size:11px; letter-spacing:.13em;
+    text-transform:uppercase; color:var(--muted); margin:0 0 12px}
+  nav a{display:block; padding:5px 0 5px 12px; color:var(--ink-2); text-decoration:none;
+    border-left:2px solid var(--line)}
+  nav a:hover{color:var(--nuit); border-left-color:var(--nuit)}
+  nav a.alerte{border-left-color:var(--bad); color:var(--bad)}
+}
+main{min-width:0; padding-top:44px}
+section{margin:0 0 58px; scroll-margin-top:24px}
+h2{font-family:"Iowan Old Style",Georgia,"Times New Roman",serif; font-weight:600; font-size:27px; letter-spacing:-.01em;
+  margin:0 0 6px; text-wrap:balance}
+h2 .num{font-family:Consolas,"Cascadia Mono","Courier New",monospace; font-size:14px; color:var(--muted);
+  margin-right:12px; font-weight:400}
+.sub{color:var(--muted); font-size:14.5px; margin:0 0 24px; max-width:72ch}
+h3{font-family:"Iowan Old Style",Georgia,"Times New Roman",serif; font-weight:600; font-size:19px; margin:32px 0 10px}
+p{max-width:72ch; margin:0 0 16px}
+code{font-family:Consolas,"Cascadia Mono","Courier New",monospace; font-size:.88em; background:var(--sunken);
+  padding:1px 5px; border-radius:2px}
+ul{max-width:72ch; padding-left:20px; margin:0 0 16px} li{margin-bottom:8px}
+
+.tw{overflow-x:auto; margin:0 0 20px; border:1px solid var(--line); border-radius:3px;
+  background:var(--surface)}
+table{border-collapse:collapse; width:100%; font-size:14px}
+th{text-align:left; font-weight:600; font-size:11.5px; letter-spacing:.07em; text-transform:uppercase;
+  color:var(--muted); padding:11px 14px; border-bottom:1px solid var(--line-2);
+  white-space:nowrap; background:var(--surface-2)}
+td{padding:10px 14px; border-bottom:1px solid var(--line); vertical-align:top}
+tr:last-child td{border-bottom:0}
+td.m{font-family:Consolas,"Cascadia Mono","Courier New",monospace; font-size:13px; white-space:nowrap}
+td.n{font-family:Consolas,"Cascadia Mono","Courier New",monospace; font-variant-numeric:tabular-nums; text-align:right;
+  white-space:nowrap}
+.pos{color:var(--ok); font-weight:500} .neg{color:var(--bad); font-weight:500}
+
+.note{border:1px solid var(--line); border-left:3px solid var(--nuit); background:var(--surface);
+  padding:16px 20px; margin:0 0 20px; border-radius:0 3px 3px 0}
+.note.ok{border-left-color:var(--ok); background:var(--ok-soft)}
+.note.alerte{border-left-color:var(--bad); background:var(--bad-soft)}
+.note.warn{border-left-color:var(--warn); background:var(--warn-soft)}
+.note p{margin:0 0 10px; font-size:15px} .note p:last-child{margin:0}
+.note .titre{font-family:"Iowan Old Style",Georgia,"Times New Roman",serif; font-weight:600; font-size:16.5px;
+  margin-bottom:8px; display:block}
+.note code{background:rgba(128,128,128,.16)}
+
+blockquote{margin:0 0 20px; padding:18px 22px; background:var(--surface);
+  border:1px solid var(--line); border-radius:3px; font-family:"Iowan Old Style",Georgia,"Times New Roman",serif;
+  font-size:16.5px; line-height:1.6; color:var(--ink)}
+blockquote p{max-width:70ch; margin:0 0 12px} blockquote p:last-child{margin:0}
+
+figure{margin:0 0 24px; background:var(--surface); border:1px solid var(--line);
+  border-radius:3px; padding:22px 18px 14px; overflow-x:auto}
+figcaption{font-size:13px; color:var(--muted); margin-top:12px; text-align:center}
+svg{display:block; margin:0 auto; max-width:100%; height:auto}
+
+</style>
+</head>
+<body>
+
+
+<div class="wrap">
+
+<header>
+  <p class="eyebrow">PFE Finance actuarielle · analyse des sorties des notebooks 03 → 09</p>
+  <h1>Le verdict des sept notebooks</h1>
+  <p class="lede">Le sentiment nocturne prédit le signe du gap d'ouverture — le résultat est solide,
+  reproduit sur les cinq titres et tous les régimes. Mais le backtest, lui, n'est pas valide : il achète
+  la veille au soir avec l'information de la nuit qui suit.</p>
+  <div class="facts">
+    <div class="fact n"><b>3 711 333</b><span>messages traités</span></div>
+    <div class="fact g"><b>0,671</b><span>AUC hors échantillon</span></div>
+    <div class="fact g"><b>+34,8 pts</b><span>écart Q5 − Q1 sur le gap</span></div>
+    <div class="fact r"><b>Sharpe 6,04</b><span>backtest — non valide</span></div>
+  </div>
+</header>
+
+<nav>
+  <p>Sommaire</p>
+  <a href="#verdict">Le verdict</a>
+  <a href="#solide">1 · Ce qui est solide</a>
+  <a href="#m1">2 · M1 — le gap</a>
+  <a href="#m2">3 · M2 — la séance</a>
+  <a href="#m3">4 · M3 — le risque</a>
+  <a href="#backtest" class="alerte">5 · Le backtest ⚠</a>
+  <a href="#corrections">6 · Trois corrections</a>
+  <a href="#conclusion">7 · La conclusion</a>
+  <a href="#suite">8 · La suite</a>
+</nav>
+
+<main>
+
+<!-- ═══════════════════════════════════════════════════ -->
+<section id="verdict">
+<h2><span class="num">§0</span>Le verdict en trois lignes</h2>
+
+<div class="note ok">
+<span class="titre">1 · Le résultat scientifique tient</span>
+<p>Le sentiment nocturne prédit le <strong>signe du gap d'ouverture</strong> : AUC de <strong>0,671</strong>
+hors échantillon, positive sur les 4 plis de validation glissante, sur les 5 titres pris séparément, et
+sur 4 régimes de marché sur 5. Les variables de marché seules donnent 0,498 — c'est-à-dire rien. L'apport
+du texte est donc de <strong>+0,17 point d'AUC</strong>, ce qui est considérable.</p>
+</div>
+
+<div class="note ok">
+<span class="titre">2 · Le résultat négatif tient aussi</span>
+<p>Le même sentiment ne prédit <strong>pas du tout</strong> le rendement de séance : AUC entre 0,487 et
+0,522 selon le modèle, ρ = −0,010, écart entre quintiles extrêmes de −2,2 points (non significatif,
+z = −0,72). Et l'analyse de puissance montre que l'étude aurait détecté toute corrélation supérieure à
+0,052. Ce n'est donc pas « on n'a pas trouvé », c'est <strong>« il n'y a rien au-delà de 0,05 »</strong>.</p>
+</div>
+
+<div class="note alerte">
+<span class="titre">3 · Mais le backtest ne mesure pas ce qu'il prétend mesurer</span>
+<p>Sharpe de <strong>6,04</strong>, rendement annuel de <strong>+94 %</strong>, perte maximale de
+<strong>−2,8 %</strong> sur un an. Aucune stratégie réelle sur cinq actions technologiques n'a jamais
+ressemblé à cela.</p>
+<p>Ce n'est pas une erreur de calcul — j'ai vérifié, l'arithmétique est cohérente avec l'AUC. C'est un
+<strong>problème de calendrier</strong> : pour capturer un gap il faut acheter à la clôture de la veille,
+or les tweets qui alimentent la prédiction n'existent pas encore à ce moment-là. Détail complet au §5.</p>
+</div>
+
+<p><strong>La bonne nouvelle</strong> : cette troisième ligne ne détruit rien. Elle transforme la
+conclusion « on gagne de l'argent » — que personne ne croirait — en « le signal est réel mais
+inexploitable », qui est <em>exactement</em> ce que prédit la théorie de l'efficience des marchés. C'est
+un meilleur mémoire, pas un moins bon.</p>
+</section>
+
+<!-- ═══════════════════════════════════════════════════ -->
+<section id="solide">
+<h2><span class="num">§1</span>Ce qui est solide : la chaîne de données</h2>
+<p class="sub">Notebook 03 — sept contrôles automatiques, tous passés.</p>
+
+<div class="tw"><table>
+<thead><tr><th>Contrôle</th><th>Résultat</th><th>Ce que ça prouve</th></tr></thead>
+<tbody>
+<tr><td>Messages traités</td><td class="n">3 711 333 / 3 711 333</td><td>aucune perte au nettoyage</td></tr>
+<tr><td>Panel produit</td><td class="n">2 740 × 81</td><td>5 titres × 548 jours, équilibré</td></tr>
+<tr><td>(1+gap)(1+ret_oc) = 1+ret_cc</td><td class="n">2,2 × 10⁻¹⁶</td><td>décomposition exacte</td></tr>
+<tr><td>mu = pos − neg</td><td class="n">1,1 × 10⁻¹⁶</td><td>identité FinBERT vérifiée</td></tr>
+<tr><td>n_night_full = overnight + pre</td><td class="n">0,0</td><td>fenêtres correctement construites</td></tr>
+<tr><td>Recoupement avec le script de collecte</td><td class="n">&lt; 8 × 10⁻¹⁶</td><td>les deux chaînes concordent</td></tr>
+<tr><td>Messages de séance en fenêtre nocturne</td><td class="n">0</td><td>aucune contamination</td></tr>
+</tbody></table></div>
+
+<h3>Trois faits établis par les données, pas supposés</h3>
+
+<p><strong>Le fuseau horaire.</strong> Le pic d'activité tombe à <strong>10h</strong>, et 59,3 % des
+messages sont postés entre 9h et 16h (contre 44,0 % entre 13h et 21h). Tes heures sont donc déjà en
+<strong>heure de New York</strong> — aucune conversion nécessaire. Le contrôle indépendant du samedi
+matin (13,1 % de messages avant 6h) confirme. C'est une figure d'annexe : elle coupe court à
+« comment savez-vous que vos fenêtres sont alignées ? ».</p>
+
+<p><strong>La fenêtre du lundi absorbe le week-end.</strong> En moyenne <strong>629</strong> messages
+nocturnes le lundi contre <strong>348</strong> les autres jours — un rapport de 1,81×. C'est la preuve
+que <code>overnight</code> part bien de la clôture du <em>jour de bourse</em> précédent et non du jour
+calendaire.</p>
+
+<p><strong>Le corpus est enfin dense.</strong> Médiane de <strong>1 138</strong> messages par nuit pour
+TSLA, 571 pour AAPL, 96 pour NVDA. Seulement <strong>4 nuits sur 2 740</strong> sans aucun message. À
+comparer à la médiane de 2 messages/jour du corpus 2023-2026 qui avait fait échouer la première tentative :
+le bruit d'échantillonnage est divisé par un facteur ~15.</p>
+
+<div class="note warn">
+<span class="titre">La limite à annoncer soi-même : FinBERT</span>
+<p>FinBERT place en moyenne <strong>80,7 %</strong> de sa masse de probabilité sur « neutre », et classe
+<strong>75,8 % des messages</strong> comme neutres à plus de 90 %. Autrement dit, il ne voit aucun contenu
+financier dans trois messages sur quatre.</p>
+<p>Ce n'est pas un bug : FinBERT a été entraîné sur de la presse financière et ne comprend pas le jargon
+de forum. Mais cela veut dire que ton signal repose en réalité sur <strong>le quart des messages</strong>
+que FinBERT sait lire. C'est une limite à écrire noir sur blanc — et le moyen de la traiter est au §8.</p>
+</div>
+</section>
+
+<!-- ═══════════════════════════════════════════════════ -->
+<section id="m1">
+<h2><span class="num">§2</span>M1 — Le gap : le résultat principal</h2>
+<p class="sub">Notebooks 04 et 06. C'est le cœur du mémoire.</p>
+
+<h3>L'analyse exploratoire</h3>
+<div class="tw"><table>
+<thead><tr><th>Quintile de sentiment nocturne</th><th>Q1</th><th>Q2</th><th>Q3</th><th>Q4</th><th>Q5</th><th>écart</th></tr></thead>
+<tbody>
+<tr><td>% de jours à <strong>gap positif</strong></td>
+  <td class="n">39,3</td><td class="n">53,9</td><td class="n">63,1</td><td class="n">63,9</td>
+  <td class="n">74,1</td><td class="n pos">+34,8</td></tr>
+<tr><td>% de jours à <strong>séance positive</strong></td>
+  <td class="n">52,8</td><td class="n">48,4</td><td class="n">48,2</td><td class="n">52,7</td>
+  <td class="n">50,6</td><td class="n">−2,2</td></tr>
+<tr><td>gap moyen (%)</td>
+  <td class="n">−0,72</td><td class="n">−0,02</td><td class="n">+0,45</td><td class="n">+0,45</td>
+  <td class="n">+0,61</td><td class="n"></td></tr>
+</tbody></table></div>
+
+<p>Ces deux premières lignes, côte à côte, <strong>sont</strong> ton mémoire. Même variable explicative,
+mêmes jours, deux cibles : l'une s'étale sur 35 points de pourcentage, l'autre oscille autour de 50 %
+sans direction.</p>
+
+<h3>Les cinq titres vont dans le même sens</h3>
+<div class="tw"><table>
+<thead><tr><th>Titre</th><th>Q1 → Q5 (% gap positif)</th><th>écart</th><th>ρ Spearman</th><th>ρ Pearson (IC 95 %)</th></tr></thead>
+<tbody>
+<tr><td class="m">AAPL</td><td class="n">31,8 → 72,7</td><td class="n pos">+40,9</td><td class="n">+0,900</td><td class="n">0,349 [0,255 ; 0,414]</td></tr>
+<tr><td class="m">TSLA</td><td class="n">38,5 → 82,6</td><td class="n pos">+44,1</td><td class="n">+1,000</td><td class="n">0,292 [0,187 ; 0,369]</td></tr>
+<tr><td class="m">NVDA</td><td class="n">44,5 → 77,3</td><td class="n pos">+32,8</td><td class="n">+1,000</td><td class="n">0,177 [0,098 ; 0,238]</td></tr>
+<tr><td class="m">AMZN</td><td class="n">40,0 → 72,7</td><td class="n pos">+32,7</td><td class="n">+0,900</td><td class="n">0,243 [0,160 ; 0,332]</td></tr>
+<tr><td class="m">META</td><td class="n">41,8 → 65,5</td><td class="n pos">+23,7</td><td class="n">+0,821</td><td class="n">0,209 [0,146 ; 0,255]</td></tr>
+</tbody></table></div>
+<p><strong>5 titres sur 5</strong> significatifs pour le gap (aucun intervalle ne contient zéro), contre
+<strong>1 sur 5</strong> pour la séance — et celui-là, AAPL, est <em>négatif</em> (−0,082), signe d'une
+légère réversion après l'ouverture, pas d'un signal.</p>
+
+<h3>Le test qui écarte la fuite d'information</h3>
+<div class="tw"><table>
+<thead><tr><th>Décalage du sentiment</th><th>−3</th><th>−2</th><th>−1</th><th>0</th><th>+1</th><th>+2</th><th>+3</th><th>+5</th></tr></thead>
+<tbody><tr><td>ρ avec le gap du jour J</td>
+<td class="n">0,028</td><td class="n">0,030</td><td class="n">0,048</td>
+<td class="n pos">0,157</td>
+<td class="n">−0,010</td><td class="n">−0,007</td><td class="n">−0,023</td><td class="n">−0,012</td></tr></tbody></table></div>
+<p>Pic net au lag 0, presque rien avant (max 0,048 sur les lags négatifs), rien après. Les trois
+conditions d'un signal propre sont réunies : il y a bien un effet, il est <strong>orienté dans le bon
+sens du temps</strong>, et l'information est incorporée immédiatement — la signature de l'efficience
+semi-forte.</p>
+
+<h3>La modélisation</h3>
+<div class="tw"><table>
+<thead><tr><th>Modèle</th><th>AUC moy.</th><th>écart-type</th><th>plis gagnants</th><th>lecture</th></tr></thead>
+<tbody>
+<tr><td>Sentiment seul</td><td class="n pos">0,671</td><td class="n">0,022</td><td class="n">4 / 4</td><td>le meilleur</td></tr>
+<tr><td>Random Forest</td><td class="n">0,670</td><td class="n">0,018</td><td class="n">4 / 4</td><td>équivalent</td></tr>
+<tr><td>Gradient Boosting</td><td class="n">0,667</td><td class="n">0,018</td><td class="n">4 / 4</td><td>équivalent</td></tr>
+<tr><td>Logistique (tout)</td><td class="n">0,664</td><td class="n">0,027</td><td class="n">4 / 4</td><td>équivalent</td></tr>
+<tr><td><strong>Contrôles de marché seuls</strong></td><td class="n neg">0,498</td><td class="n">0,034</td><td class="n">2 / 4</td><td><strong>rien du tout</strong></td></tr>
+</tbody></table></div>
+
+<p><strong>Deux choses importantes.</strong> D'abord, les modèles complexes n'apportent rien : la
+régression logistique sur le sentiment seul fait aussi bien qu'un Random Forest. <em>Il faut le dire</em> —
+un résultat simple et robuste vaut mieux qu'un résultat complexe et fragile.</p>
+<p>Ensuite, la ligne « contrôles seuls » à 0,498 répond définitivement à l'objection <em>« vous avez juste
+redécouvert le momentum »</em>. Le momentum, la volatilité et le volume ne prédisent <strong>rien</strong>.
+Tout vient du texte.</p>
+
+<h3>Les tests de falsification</h3>
+<div class="tw"><table>
+<thead><tr><th>Variante</th><th>AUC</th><th>attendu</th><th>verdict</th></tr></thead>
+<tbody>
+<tr><td>Toutes les variables</td><td class="n">0,664</td><td>référence</td><td>—</td></tr>
+<tr><td>Sans sentiment</td><td class="n">0,498</td><td>doit chuter</td><td class="pos">OK</td></tr>
+<tr><td>Sentiment <strong>inversé</strong></td><td class="n">0,335</td><td>doit passer sous 0,50</td><td class="pos">OK</td></tr>
+<tr><td>Sentiment <strong>permuté</strong> (placebo)</td><td class="n">0,494</td><td>doit revenir à 0,50</td><td class="pos">OK</td></tr>
+<tr><td>Jeu conservateur (coupé à minuit)</td><td class="n">0,597</td><td>doit rester &gt; 0,50</td><td class="pos">OK</td></tr>
+<tr><td>Leave-one-ticker-out</td><td class="n">0,676</td><td>doit rester &gt; 0,50</td><td class="pos">OK</td></tr>
+</tbody></table></div>
+<p>Le <strong>leave-one-ticker-out</strong> est le plus fort : le modèle entraîné sans jamais voir AAPL
+obtient 0,727 sur AAPL. Le signal n'est pas propre à une action, il se transfère à un titre inconnu. C'est
+l'argument le plus solide contre l'accusation de surajustement.</p>
+
+<div class="note">
+<span class="titre">Une nuance à retenir pour le §5</span>
+<p>Le passage au <strong>jeu conservateur</strong> (fenêtre coupée à minuit) fait tomber l'AUC de 0,664 à
+<strong>0,597</strong>. Et l'importance par permutation le confirme : la variable de loin la plus utile
+est <code>z_mu_pre</code> — les messages postés entre <strong>minuit et 9h30</strong>.</p>
+<p>Or c'est justement pendant cette fenêtre que se déroule la séance de <strong>pré-marché</strong>
+(4h00 → 9h30). Les messages de 8h du matin ne <em>prédisent</em> pas l'ouverture : ils
+<em>commentent</em> les prix de pré-marché qui sont en train de la fabriquer. Retiens ce point, c'est la
+clé du §5.</p>
+</div>
+</section>
+
+<!-- ═══════════════════════════════════════════════════ -->
+<section id="m2">
+<h2><span class="num">§3</span>M2 — La séance : le résultat négatif, bien démontré</h2>
+<p class="sub">Notebook 07, partie A. Un résultat négatif n'a de valeur que si l'on prouve avoir vraiment cherché.</p>
+
+<div class="tw"><table>
+<thead><tr><th>Cible</th><th>Sentiment seul</th><th>Tout</th><th>Marché seul</th></tr></thead>
+<tbody>
+<tr><td><strong>Séance</strong> (Open → Close)</td><td class="n">0,493 / 0,517</td><td class="n">0,519 / 0,488</td><td class="n">0,522 / 0,487</td></tr>
+<tr><td><strong>Gap</strong> (contrôle positif)</td><td class="n pos">0,671 / 0,664</td><td class="n pos">0,664 / 0,672</td><td class="n">0,498 / 0,505</td></tr>
+</tbody></table></div>
+<p style="color:var(--muted); font-size:14px">AUC en validation glissante — logistique / boosting.</p>
+
+<p><strong>Le contrôle positif est ce qui rend ce résultat publiable.</strong> Même pipeline, mêmes
+variables, mêmes plis : seule la cible change. Le gap sort à 0,67, la séance à 0,50. L'absence de signal
+sur la séance est donc une propriété <strong>du marché</strong>, pas une défaillance de la méthode.</p>
+
+<h3>L'analyse de puissance : la phrase qui fait la différence</h3>
+<div class="tw"><table>
+<thead><tr><th>Cible</th><th>ρ observé</th><th>n effectif</th><th>ρ détectable à 80 %</th><th>conclusion</th></tr></thead>
+<tbody>
+<tr><td class="m">gap</td><td class="n pos">+0,157</td><td class="n">2 869</td><td class="n">0,052</td><td class="pos">signal détecté</td></tr>
+<tr><td class="m">ret_oc</td><td class="n">−0,010</td><td class="n">3 123</td><td class="n">0,050</td><td>sous le seuil</td></tr>
+<tr><td class="m">ret_cc</td><td class="n pos">+0,093</td><td class="n">2 988</td><td class="n">0,051</td><td class="pos">signal détecté</td></tr>
+</tbody></table></div>
+
+<blockquote>
+<p>« Avec 3 123 observations effectives, l'étude dispose d'une puissance de 80 % pour détecter une
+corrélation de 0,050 entre sentiment nocturne et rendement de séance. La corrélation observée est de
+−0,010. Nous pouvons donc <strong>exclure</strong> l'existence d'un effet d'ampleur supérieure à 0,05, et
+non simplement constater notre incapacité à le mesurer. »</p>
+</blockquote>
+
+<p>Sept variantes ont été testées (jours extrêmes seulement, forte attention, intensité non signée…) :
+toutes restent entre 0,49 et 0,56. La conclusion d'absence est robuste — <em>on n'a pas mal cherché, il
+n'y a rien</em>. Et cela porte un nom : <strong>l'efficience semi-forte</strong> au sens de Fama (1970).</p>
+</section>
+
+<!-- ═══════════════════════════════════════════════════ -->
+<section id="m3">
+<h2><span class="num">§4</span>M3 — Le risque : le résultat le plus utile</h2>
+<p class="sub">Notebook 07, partie B. C'est le pont avec l'actuariat, et c'est le seul résultat directement exploitable.</p>
+
+<div class="tw"><table>
+<thead><tr><th>Modèle (cible : log de l'amplitude intraday)</th><th>R² in-sample</th><th>R² hors échantillon</th><th>QLIKE</th></tr></thead>
+<tbody>
+<tr><td>Naïf — amplitude de la veille</td><td class="n">—</td><td class="n">0,242</td><td class="n">0,708</td></tr>
+<tr><td>Effets fixes ticker seuls</td><td class="n">0,240</td><td class="n">—</td><td class="n">—</td></tr>
+<tr><td><strong>Volatilité passée</strong> (référence)</td><td class="n">0,444</td><td class="n">0,495</td><td class="n">0,438</td></tr>
+<tr><td><strong>+ attention sociale</strong></td><td class="n pos">0,485</td><td class="n pos">0,527</td><td class="n pos">0,392</td></tr>
+</tbody></table></div>
+
+<p>L'apport net du texte est de <strong>+0,032 point de R² hors échantillon</strong> au-delà d'un modèle
+de volatilité déjà très bon, avec un test de Fisher écrasant (F = 38,4 ; p = 5 × 10⁻³⁸). Le QLIKE — la
+fonction de perte de référence pour la volatilité, qui pénalise la <em>sous-estimation</em> du risque —
+s'améliore de 0,438 à 0,392.</p>
+
+<h3>La Value-at-Risk conditionnelle : le résultat d'actuariat</h3>
+<div class="tw"><table>
+<thead><tr><th>Modèle de VaR 95 %</th><th>Dépassements</th><th>Taux observé</th><th>Cible</th><th>Kupiec (p)</th><th>Verdict</th></tr></thead>
+<tbody>
+<tr><td>Inconditionnelle (quantile historique)</td><td class="n">55 / 896</td><td class="n">6,14 %</td><td class="n">5 %</td><td class="n">0,131</td><td>risque sous-estimé</td></tr>
+<tr><td><strong>Conditionnelle (pilotée par l'attention)</strong></td><td class="n">45 / 896</td><td class="n pos">5,02 %</td><td class="n">5 %</td><td class="n pos">0,976</td><td class="pos">couverture exacte</td></tr>
+</tbody></table></div>
+
+<p>La VaR conditionnelle atteint une couverture <strong>quasi parfaite</strong> (5,02 % contre 5 % visés,
+p de Kupiec = 0,976) là où la VaR historique classique sous-estime le risque (6,14 % de dépassements).
+Et elle le fait avec une VaR moyenne équivalente (−3,83 % contre −3,81 %) : <strong>même capital
+immobilisé, meilleure protection</strong>.</p>
+
+<div class="note ok">
+<span class="titre">C'est ce résultat qu'il faut mettre en avant devant un jury d'actuariat</span>
+<p>Prédire la <em>direction</em> est difficile et, on va le voir, non rentable. Prédire le <em>risque</em>
+fonctionne, s'améliore mesurablement grâce au texte, et se traduit directement en un outil réglementaire
+validé par un test de couverture standard (Bâle, Solvabilité II). C'est la partie du mémoire qui a le plus
+de valeur professionnelle.</p>
+</div>
+</section>
+
+<!-- ═══════════════════════════════════════════════════ -->
+<section id="backtest">
+<h2><span class="num">§5</span>Le backtest : pourquoi le Sharpe de 6 n'est pas réel</h2>
+<p class="sub">Notebook 08. La section la plus importante de ce document.</p>
+
+<div class="tw"><table>
+<thead><tr><th>Stratégie (coût 10 bp)</th><th>Rendement annuel</th><th>Sharpe</th><th>Drawdown max</th></tr></thead>
+<tbody>
+<tr><td><strong>Modèle — proportionnel</strong></td><td class="n">+94,1 %</td><td class="n">6,04</td><td class="n">−2,8 %</td></tr>
+<tr><td>Long systématique du gap</td><td class="n">−13,4 %</td><td class="n">−0,76</td><td class="n">−17,3 %</td></tr>
+<tr><td>Buy &amp; hold (5 actions)</td><td class="n">+21,7 %</td><td class="n">0,75</td><td class="n">−26,1 %</td></tr>
+<tr><td>Positions aléatoires</td><td class="n">−9,8 %</td><td class="n">−0,74</td><td class="n">−14,5 %</td></tr>
+</tbody></table></div>
+
+<p>Un Sharpe de 6 avec une perte maximale de 2,8 % sur un an — pendant une période qui contient le
+resserrement de la Fed et une correction de 20 % sur le Nasdaq. <strong>Cela n'existe pas.</strong> Les
+meilleurs fonds quantitatifs du monde tournent autour de 2.</p>
+
+<h3>Ce n'est pas une erreur de calcul</h3>
+<p>J'ai refait l'arithmétique : avec un gap moyen de 1,20 % en valeur absolue, ce rendement suppose un
+taux de réussite directionnelle de <strong>65,6 %</strong> — ce qui est parfaitement cohérent avec une
+AUC de 0,663 et un taux de base de 55 %. Le calcul du P&amp;L est juste. <strong>C'est l'hypothèse de
+négociabilité qui est fausse.</strong></p>
+
+<h3>Le problème, en une image</h3>
+<figure>
+<svg viewBox="0 0 900 240" role="img" aria-label="Le décalage entre le moment où la position doit être prise et le moment où l'information devient disponible">
+  <line x1="60" y1="46" x2="60" y2="200" stroke="var(--bad)" stroke-width="2"/>
+  <line x1="640" y1="46" x2="640" y2="200" stroke="var(--ink)" stroke-width="1.5"/>
+  <text x="60" y="34" text-anchor="middle" font-family="IBM Plex Mono, monospace" font-size="12" fill="var(--bad)">16h00 (J−1)</text>
+  <text x="640" y="34" text-anchor="middle" font-family="IBM Plex Mono, monospace" font-size="12" fill="var(--ink)">09h30 (J)</text>
+
+  <rect x="60" y="60" width="580" height="34" fill="var(--nuit-soft)" stroke="var(--nuit)"/>
+  <text x="350" y="82" text-anchor="middle" font-family="IBM Plex Mono, monospace" font-size="12.5" fill="var(--nuit-ink)">les messages de la nuit arrivent ici</text>
+
+  <line x1="60" y1="126" x2="632" y2="126" stroke="var(--nuit)" stroke-width="2.5"/>
+  <path d="M632 120 L642 126 L632 132 Z" fill="var(--nuit)"/>
+  <text x="350" y="118" text-anchor="middle" font-family="IBM Plex Mono, monospace" font-size="12.5" fill="var(--nuit)">le gap se forme ici</text>
+
+  <circle cx="60" cy="170" r="7" fill="var(--bad)"/>
+  <text x="76" y="167" font-size="13" fill="var(--bad)" font-weight="600">Il faut acheter ICI…</text>
+  <text x="76" y="185" font-size="12.5" fill="var(--muted)">dernier prix négociable avant le gap</text>
+
+  <circle cx="640" cy="170" r="7" fill="var(--jour)"/>
+  <text x="632" y="167" text-anchor="end" font-size="13" fill="var(--jour)" font-weight="600">…mais on ne sait qu'ICI</text>
+  <text x="632" y="185" text-anchor="end" font-size="12.5" fill="var(--muted)">quand tous les messages sont là</text>
+
+  <path d="M60 212 L640 212" stroke="var(--bad)" stroke-width="1.5" stroke-dasharray="6 4"/>
+  <text x="350" y="230" text-anchor="middle" font-size="12.5" fill="var(--bad)" font-weight="600">17 h 30 d'information venue du futur</text>
+</svg>
+<figcaption>Le backtest suppose qu'on peut prendre position à 16h00 avec des tweets qui seront écrits
+pendant la nuit suivante.</figcaption>
+</figure>
+
+<p>Le gap est le mouvement entre la clôture de la veille et l'ouverture. Pour l'encaisser, il faut
+détenir le titre <strong>pendant toute la nuit</strong> — donc acheter à 16h00 le jour J−1. À cet
+instant, aucun des messages de la fenêtre nocturne n'a encore été écrit.</p>
+
+<p>Le problème est même plus profond que le simple calendrier. La fenêtre <code>pre</code> (minuit → 9h30)
+est la variable la plus importante du modèle, et elle recouvre la <strong>séance de pré-marché</strong>
+(4h00 → 9h30), pendant laquelle le prix d'ouverture est littéralement en train d'être fabriqué. Un tweet
+de 8h45 qui dit « AAPL +3 % en pré-marché » ne prédit rien : il <em>décrit</em> le gap.</p>
+
+<h3>La preuve est déjà dans ton notebook</h3>
+<div class="tw"><table>
+<thead><tr><th>Test de robustesse (notebook 08)</th><th>Rendement</th><th>Sharpe</th><th>Drawdown</th></tr></thead>
+<tbody>
+<tr><td>Référence</td><td class="n">+94,1 %</td><td class="n">6,04</td><td class="n">−2,8 %</td></tr>
+<tr><td><strong>Signal retardé d'un jour</strong></td><td class="n neg">−7,7 %</td><td class="n neg">−0,53</td><td class="n">−15,9 %</td></tr>
+<tr><td>Signal inversé</td><td class="n">−144,5 %</td><td class="n">−9,27</td><td class="n">−75,0 %</td></tr>
+<tr><td>Sans le meilleur mois</td><td class="n">+78,0 %</td><td class="n">6,29</td><td class="n">−2,8 %</td></tr>
+</tbody></table></div>
+
+<p>J'avais écrit la ligne « signal retardé d'un jour » comme un simple test de détection de fuite. En
+réalité, <strong>c'est la seule version économiquement valide de la stratégie</strong> : elle utilise le
+sentiment de la nuit précédente pour se positionner à la clôture, ce qui est faisable. Et elle donne un
+Sharpe de <strong>−0,53</strong>.</p>
+
+<div class="note alerte">
+<span class="titre">La conclusion économique du mémoire</span>
+<p>Le signal existe et il est fort. Mais il devient observable <strong>exactement au moment où il cesse
+d'être négociable</strong>. La version implémentable perd de l'argent.</p>
+<p>Ce n'est pas un échec : c'est la définition même de l'efficience de marché au sens de
+<strong>Jensen (1978)</strong> — un marché est efficient s'il n'existe aucune stratégie dégageant un
+profit <em>net des coûts et des contraintes de mise en œuvre</em>. Une anomalie statistique peut donc
+coexister avec l'efficience. Ton travail en fournit une démonstration quantitative propre.</p>
+</div>
+
+<p><strong>Ce qu'il ne faut surtout pas faire :</strong> présenter le Sharpe de 6,04 en soutenance. Le
+premier membre du jury qui connaît les marchés demandera comment tu prends la position, et la
+démonstration s'effondrera en direct. Présente le résultat statistique (AUC 0,671), puis explique
+toi-même pourquoi il n'est pas exploitable. Tu passes du statut de candidat qui s'est fait piéger à celui
+de candidat qui a compris son propre résultat.</p>
+</section>
+
+<!-- ═══════════════════════════════════════════════════ -->
+<section id="corrections">
+<h2><span class="num">§6</span>Trois corrections avant de rédiger</h2>
+
+<div class="note warn">
+<span class="titre">1 · Colinéarité catastrophique dans la régression logistique</span>
+<p>Les VIF affichés par le notebook 06 sont ingérables : <code>ret_cc_lag1</code> à <strong>1 516</strong>,
+<code>ret_oc_lag1</code> à 827, <code>gap_lag1</code> à 631, et <code>z_mu_night_full</code> à
+<strong>101</strong>. Au-delà de 5, un coefficient n'est déjà plus interprétable.</p>
+<p>La cause est mécanique, et je l'avais signalée sans l'appliquer : <code>ret_cc = (1+gap)(1+ret_oc)−1</code>
+et <code>mu = pos − neg</code> sont des <strong>identités exactes</strong>. Mettre les trois membres dans
+la même régression rend la matrice quasi singulière.</p>
+<p><strong>Correctif :</strong> retirer <code>ret_cc_lag1</code> (garder gap_lag1 et ret_oc_lag1), et
+retirer <code>z_pos_night_full</code> / <code>z_neg_night_full</code> quand <code>z_mu_night_full</code>
+est présent. L'AUC ne bougera quasiment pas — les arbres n'en souffrent pas — mais les coefficients
+redeviendront lisibles. Sans cela, le coefficient de +1,00 sur <code>z_mu_night_full</code> et de −0,74 sur
+<code>z_pos_night_full</code> (de signe opposé alors que les deux mesurent l'optimisme !) sont
+ininterprétables.</p>
+</div>
+
+<div class="note warn">
+<span class="titre">2 · Le bloc de test final n'a jamais été évalué</span>
+<p>Le notebook 09 signale <code>[MANQUE] Résultats TEST M1 (06)</code>. La dernière section du notebook 06
+n'a pas tourné. <strong>Tous les chiffres d'AUC que tu as sont donc des chiffres de validation</strong>,
+pas de test verrouillé.</p>
+<p>Ce n'est pas grave — la validation glissante est déjà hors échantillon et c'est elle qui compte le
+plus. Mais il faut soit exécuter cette cellule <strong>une seule fois</strong> et reporter le chiffre, soit
+écrire clairement dans le mémoire que l'évaluation repose sur la validation glissante à 4 plis.
+<strong>Ne pas laisser croire</strong> qu'un test verrouillé a été fait.</p>
+</div>
+
+<div class="note warn">
+<span class="titre">3 · Le régime « Reprise / liquidité » n'est pas significatif</span>
+<p>Sur les cinq régimes, quatre donnent une corrélation significative, mais <strong>avril → décembre
+2020</strong> donne ρ = 0,058 avec un intervalle [−0,005 ; +0,120] qui touche zéro. Le notebook le marque
+« fragile ».</p>
+<p>Il faut le reporter, pas le masquer. Interprétation plausible : pendant le rebond en V post-COVID,
+tout montait quoi qu'il arrive, et le sentiment individuel se noyait dans un mouvement de marché
+généralisé. C'est un point de discussion intéressant, pas une faiblesse.</p>
+</div>
+</section>
+
+<!-- ═══════════════════════════════════════════════════ -->
+<section id="conclusion">
+<h2><span class="num">§7</span>La conclusion du PFE, rédigée</h2>
+<p class="sub">À adapter, mais la structure et les chiffres sont ceux de tes résultats.</p>
+
+<blockquote>
+<p>Ce travail examine si le sentiment exprimé sur les réseaux sociaux financiers contient une information
+exploitable sur les prix. Il s'appuie sur 3,7 millions de messages StockTwits couvrant cinq titres
+technologiques de janvier 2020 à mars 2022, scorés par FinBERT et agrégés en fenêtres alignées sur les
+horaires de la bourse de New York.</p>
+
+<p>La contribution méthodologique centrale est la <strong>décomposition du rendement quotidien</strong> en
+deux composantes : le <em>gap</em> d'ouverture, qui se forme marché fermé, et le rendement de
+<em>séance</em>. Cette séparation révèle une asymétrie nette. Le sentiment nocturne prédit le signe du gap
+— ρ = 0,157, écart de 34,8 points de pourcentage entre quintiles extrêmes, AUC de 0,671 en validation
+glissante, effet significatif sur les cinq titres pris séparément et sur quatre régimes de marché sur
+cinq. Il ne prédit en revanche <strong>pas</strong> le rendement de séance : ρ = −0,010, AUC de 0,50, et
+l'analyse de puissance permet d'exclure tout effet d'ampleur supérieure à 0,05.</p>
+
+<p>Cette asymétrie n'est pas un demi-échec : elle constitue une <strong>vérification empirique de
+l'hypothèse d'efficience semi-forte</strong> (Fama, 1970). L'information publique véhiculée par les
+messages nocturnes est intégralement incorporée au prix dès l'ouverture, et il n'en subsiste rien pour la
+séance. La structure temporelle du signal le confirme : la corrélation est maximale au décalage zéro et
+disparaît dès le lendemain.</p>
+
+<p>L'analyse économique conduit toutefois à nuancer fortement l'exploitabilité de ce signal. La capture du
+gap suppose une position prise à la clôture de la veille, soit jusqu'à dix-sept heures avant que
+l'information textuelle ne soit disponible ; la fenêtre de pré-marché, qui porte l'essentiel du pouvoir
+prédictif, est de surcroît <strong>contemporaine</strong> de la formation du prix d'ouverture. La version
+implémentable de la stratégie — décalée d'une journée pour respecter cette contrainte — dégage un ratio de
+Sharpe de −0,53. Le signal est donc statistiquement réel et économiquement inaccessible, ce qui est
+précisément la définition de l'efficience au sens de <strong>Jensen (1978)</strong>.</p>
+
+<p>Le résultat le plus directement valorisable relève de la <strong>gestion du risque</strong> plutôt que
+de la prévision directionnelle. L'attention sociale anormale améliore la prévision de l'amplitude intraday
+au-delà d'un modèle de volatilité historique (R² hors échantillon de 0,527 contre 0,495 ; QLIKE de 0,392
+contre 0,438), et se traduit par une Value-at-Risk conditionnelle dont la couverture empirique est
+statistiquement exacte (5,02 % de dépassements pour une cible de 5 % ; test de Kupiec, p = 0,976), là où
+la VaR historique inconditionnelle sous-estime le risque (6,14 %). À capital immobilisé équivalent, la
+protection est meilleure.</p>
+
+<p>Ces conclusions doivent être lues à la lumière de trois limites. L'univers se réduit à cinq titres
+technologiques très liquides, sélectionnés <em>ex post</em> pour leur volume de discussion, ce qui
+introduit un biais de sélection. La période, marquée par la crise sanitaire, un afflux de liquidité sans
+précédent et un essor du trading des particuliers, n'est pas représentative d'un régime ordinaire. Enfin,
+FinBERT, entraîné sur de la presse financière, classe 76 % des messages comme neutres : le signal repose
+donc sur la fraction du corpus que le modèle sait interpréter, et un classifieur adapté au registre des
+forums constituerait la première voie d'amélioration.</p>
+</blockquote>
+</section>
+
+<!-- ═══════════════════════════════════════════════════ -->
+<section id="suite">
+<h2><span class="num">§8</span>Ce qu'il reste à faire</h2>
+
+<div class="tw"><table>
+<thead><tr><th>Priorité</th><th>Action</th><th>Pourquoi</th></tr></thead>
+<tbody>
+<tr><td class="n">1</td><td>Refaire le backtest avec un <strong>décalage d'un jour</strong> et en faire le résultat principal</td>
+<td>c'est la seule version défendable ; le Sharpe de 6 ne doit pas apparaître dans le mémoire autrement que comme un contre-exemple pédagogique</td></tr>
+<tr><td class="n">2</td><td>Retirer <code>ret_cc_lag1</code>, <code>z_pos</code>, <code>z_neg</code> et relancer la logistique</td>
+<td>rendre les coefficients interprétables (VIF actuels : 1 516 et 101)</td></tr>
+<tr><td class="n">3</td><td>Récupérer les étiquettes <strong>Bullish / Bearish</strong> des fichiers Kaggle</td>
+<td>valider FinBERT sur une vérité terrain externe — répond directement à la limite des 76 % de neutres</td></tr>
+<tr><td class="n">4</td><td>Ajouter une variante <code>overnight</code> seul (coupée à minuit) comme spécification principale</td>
+<td>AUC 0,597, plus faible mais exempte de toute objection de pré-marché</td></tr>
+<tr><td class="n">5</td><td>Exécuter la cellule de test final du notebook 06, <strong>une seule fois</strong></td>
+<td>ou assumer explicitement que l'évaluation repose sur la validation glissante</td></tr>
+</tbody></table></div>
+
+<h3>Le message à retenir</h3>
+<p>Ton travail est <strong>bon</strong>, et il l'est pour une raison qui n'a rien à voir avec le niveau
+de l'AUC. Tu as diagnostiqué un échec initial au lieu de le contourner ; le diagnostic était juste
+(mauvaise cible, corpus trop mince). Tu as démontré une asymétrie entre deux composantes du rendement,
+avec une interprétation théorique solide. Et tu disposes d'une batterie de tests — falsification par
+inversion, placebo par permutation, leave-one-ticker-out, lags négatifs, analyse de puissance — que très
+peu de mémoires sur ce sujet mettent en place.</p>
+<p>La seule chose qui manquait, c'était de reconnaître que le résultat le plus spectaculaire était le
+moins crédible. Maintenant que c'est fait, l'ensemble tient debout.</p>
+</section>
+
+</main>
+</div>
+
+</body>
+</html>

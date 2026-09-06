@@ -1,0 +1,1727 @@
+<!DOCTYPE html>
+<html lang="fr"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Cours 2 — Notebook 04 : l'analyse exploratoire</title><style>
+:root{--paper:#eef1f4;--surface:#fff;--surface-2:#f5f8fa;--sunken:#e4eaef;--ink:#131b24;
+--ink-2:#37475a;--muted:#66788a;--line:#d3dbe3;--line-2:#c0cbd6;--nuit:#1b4f72;
+--warn:#8a6a1f;--warn-soft:#f7f0dd}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+--paper:#0d1218;--surface:#141c25;--surface-2:#19232e;--sunken:#101820;--ink:#e6edf4;--ink-2:#b7c5d2;
+--muted:#8296a8;--line:#28343f;--line-2:#33424f;--nuit:#7fb8dd;--warn:#d6b768;--warn-soft:#2c2617}}
+:root[data-theme="dark"]{--paper:#0d1218;--surface:#141c25;--surface-2:#19232e;--sunken:#101820;
+--ink:#e6edf4;--ink-2:#b7c5d2;--muted:#8296a8;--line:#28343f;--line-2:#33424f;--nuit:#7fb8dd;
+--warn:#d6b768;--warn-soft:#2c2617}
+*,*::before,*::after{box-sizing:border-box}
+body{background:var(--paper);color:var(--ink);font-family:system-ui,-apple-system,"Segoe UI",sans-serif;
+font-size:16.5px;line-height:1.68;margin:0;padding:0 24px 100px;-webkit-font-smoothing:antialiased}
+.page{max-width:880px;margin:0 auto}
+h1{font-family:"Iowan Old Style",Georgia,serif;font-weight:600;font-size:clamp(29px,5vw,42px);
+line-height:1.13;letter-spacing:-.015em;margin:60px 0 18px;text-wrap:balance}
+h2{font-family:"Iowan Old Style",Georgia,serif;font-weight:600;font-size:27px;letter-spacing:-.01em;
+margin:52px 0 14px;text-wrap:balance}
+h3{font-family:"Iowan Old Style",Georgia,serif;font-weight:600;font-size:20px;margin:32px 0 10px}
+p{margin:0 0 16px}
+strong{font-weight:600}
+code{font-family:Consolas,"Cascadia Mono","Courier New",monospace;font-size:.87em;
+background:var(--sunken);padding:1px 5px;border-radius:2px}
+pre{background:var(--sunken);border-left:3px solid var(--nuit);padding:14px 18px;overflow-x:auto;
+border-radius:0 3px 3px 0;margin:0 0 20px}
+pre code{background:none;padding:0;font-size:13.5px;line-height:1.6;white-space:pre}
+table{border-collapse:collapse;width:100%;font-size:14.5px;background:var(--surface);
+border:1px solid var(--line);border-radius:3px;margin:0 0 22px;display:block;overflow-x:auto}
+th{text-align:left;font-weight:600;font-size:11.5px;letter-spacing:.07em;text-transform:uppercase;
+color:var(--muted);padding:11px 14px;border-bottom:1px solid var(--line-2);background:var(--surface-2);
+white-space:nowrap}
+td{padding:10px 14px;border-bottom:1px solid var(--line);vertical-align:top}
+tr:last-child td{border-bottom:0}
+blockquote{margin:0 0 22px;padding:16px 22px;background:var(--warn-soft);
+border-left:3px solid var(--warn);border-radius:0 3px 3px 0}
+blockquote p:last-child{margin:0}
+blockquote h3{margin-top:0;font-size:17.5px}
+ul,ol{margin:0 0 16px;padding-left:22px}li{margin-bottom:8px}
+hr{border:0;border-top:1px solid var(--line);margin:46px 0}
+a{color:var(--nuit)}
+</style></head>
+<body><div class="page">
+<h1 id="cours-2-notebook-04-lanalyse-exploratoire">Cours 2 — Notebook 04 : l'analyse exploratoire</h1>
+<p><strong>Comment on découvre où se cache le signal — et comment on prouve qu'on ne s'est pas trompé</strong></p>
+<p><em>Cours détaillé, chapitre par chapitre. Chaque test : la notion, la formule, ce qu'il prouve, ce qu'il
+ne prouve pas, et le piège associé.</em></p>
+<hr />
+<h2 id="table-des-matieres">Table des matières</h2>
+<table>
+<thead>
+<tr>
+<th>#</th>
+<th>Chapitre</th>
+<th>Notion statistique enseignée</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>0</td>
+<td>À quoi sert une EDA</td>
+<td>démarche exploratoire</td>
+</tr>
+<tr>
+<td>1</td>
+<td>Cartographier les 81 colonnes</td>
+<td>organisation des données</td>
+</tr>
+<tr>
+<td>2</td>
+<td>Les identités comptables</td>
+<td>validation par redondance</td>
+</tr>
+<tr>
+<td>3</td>
+<td>Statistiques descriptives</td>
+<td>moyenne, écart-type, comparabilité</td>
+</tr>
+<tr>
+<td>4</td>
+<td>La densité du corpus</td>
+<td>loi log-normale, quantiles</td>
+</tr>
+<tr>
+<td>5</td>
+<td>Prix vs sentiment</td>
+<td><strong>régression fallacieuse</strong></td>
+</tr>
+<tr>
+<td>6</td>
+<td>La corrélation de Pearson</td>
+<td>covariance, ρ, ce qu'elle rate</td>
+</tr>
+<tr>
+<td>7</td>
+<td>Prédictif vs contemporain</td>
+<td><strong>causalité temporelle</strong> ⭐</td>
+</tr>
+<tr>
+<td>8</td>
+<td>La heatmap</td>
+<td>multicolinéarité</td>
+</tr>
+<tr>
+<td>9</td>
+<td>Les quintiles</td>
+<td><strong>analyse non paramétrique</strong> ⭐</td>
+</tr>
+<tr>
+<td>10</td>
+<td>Le biais de niveau</td>
+<td><strong>paradoxe de Simpson</strong></td>
+</tr>
+<tr>
+<td>11</td>
+<td>Le test z de proportions</td>
+<td>test d'hypothèse, p-value</td>
+</tr>
+<tr>
+<td>12</td>
+<td>Le bootstrap par blocs</td>
+<td><strong>indépendance violée</strong> ⭐</td>
+</tr>
+<tr>
+<td>13</td>
+<td>Le Spearman</td>
+<td>corrélation de rang, monotonie</td>
+</tr>
+<tr>
+<td>14</td>
+<td>Les lags</td>
+<td><strong>falsification</strong> ⭐</td>
+</tr>
+<tr>
+<td>15</td>
+<td>Modèles emboîtés</td>
+<td>R², test de Fisher</td>
+</tr>
+<tr>
+<td>16</td>
+<td>Les régimes</td>
+<td>IC de Fisher, stabilité</td>
+</tr>
+<tr>
+<td>17</td>
+<td>Récapitulatif</td>
+<td>les 12 idées à retenir</td>
+</tr>
+</tbody>
+</table>
+<p>⭐ = les quatre sections qui font la valeur du mémoire.</p>
+<hr />
+<h1 id="chapitre-0-a-quoi-sert-une-analyse-exploratoire">Chapitre 0 — À quoi sert une analyse exploratoire</h1>
+<h2 id="01-le-principe">0.1 — Le principe</h2>
+<p><strong>EDA</strong> = <em>Exploratory Data Analysis</em>, analyse exploratoire des données. Le terme vient de John Tukey
+(1977), le statisticien qui a aussi inventé la boîte à moustaches et la transformée de Fourier rapide.</p>
+<p>Son idée était provocante à l'époque : <strong>avant de tester une hypothèse, il faut regarder les données</strong>.
+La statistique classique disait l'inverse — on formule une hypothèse, on collecte, on teste. Tukey a
+montré que cette rigidité fait rater l'essentiel.</p>
+<h2 id="02-pourquoi-cette-partie-vient-avant-les-modeles">0.2 — Pourquoi cette partie vient AVANT les modèles</h2>
+<p>Voici l'erreur que fait la majorité des projets de data science :</p>
+<pre><code>❌ Mauvaise démarche :
+   données → modèle → résultat médiocre → autre modèle → encore médiocre
+             → « essayons du deep learning » → toujours médiocre → abandon
+</code></pre>
+<pre><code>✅ Bonne démarche :
+   données → EDA → « le signal est ICI, pas LÀ » → modèle sur la bonne cible
+</code></pre>
+<p><strong>C'est exactement l'histoire de ton PFE.</strong> Ta phase 5 initiale a enchaîné les modèles sur <code>ret_cc</code> sans
+jamais se demander si le signal s'y trouvait. Il n'y était pas. Aucun modèle, aussi sophistiqué soit-il,
+ne peut extraire une information qui n'existe pas.</p>
+<blockquote>
+<p><strong>L'analogie.</strong> Tu cherches tes clés. La mauvaise méthode : acheter une lampe torche de plus en plus
+puissante et fouiller le salon. La bonne méthode : te demander d'abord dans quelle pièce tu es entré en
+dernier. L'EDA, c'est se poser cette question.</p>
+</blockquote>
+<h2 id="03-ce-que-la-partie-4-doit-produire">0.3 — Ce que la partie 4 doit produire</h2>
+<p>Elle ne construit <strong>aucun modèle</strong>. Elle produit <strong>quatre décisions</strong> :</p>
+<table>
+<thead>
+<tr>
+<th>Décision</th>
+<th>Fondée sur</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>La cible sera <code>y_gap</code>, pas <code>ret_oc</code> ni <code>ret_cc</code></td>
+<td>ch. 7, 9, 11</td>
+</tr>
+<tr>
+<td>Les fenêtres <code>open30</code>, <code>mkt</code>, <code>post</code> sont exclues</td>
+<td>ch. 7</td>
+</tr>
+<tr>
+<td>Les variables seront normalisées <strong>par titre</strong></td>
+<td>ch. 3, 10</td>
+</tr>
+<tr>
+<td>Les modèles <strong>non linéaires</strong> sont justifiés</td>
+<td>ch. 9</td>
+</tr>
+</tbody>
+</table>
+<p>Et elle produit <strong>une preuve</strong> : qu'il n'y a pas de fuite d'information (ch. 14).</p>
+<hr />
+<h1 id="chapitre-1-cartographier-les-81-colonnes">Chapitre 1 — Cartographier les 81 colonnes</h1>
+<pre><code>Identité                 ( 2) : Date, Ticker
+Prix bruts (OHLCV)       ( 5) : Open, High, Low, Close, Volume
+Prix dérivés             ( 7) : prev_close, prev_volume, prev_ret_cc, vol_20d,
+                                gap, ret_oc, ret_cc
+Cibles binaires          ( 3) : y_gap, y_oc, y_cc
+Sentiment — overnight    ( 7) : n, mu, sd, p10, p90, pos, neg
+Sentiment — pre          ( 7) : idem
+Sentiment — night_full   (10) : idem + nlog, nabn, disp
+Sentiment — open30       (10) : idem
+Sentiment — mkt          (10) : idem
+Sentiment — post         (10) : idem
+Dérivées / décalées      (10) : dmu_night, mu_night_ma3, mu_night_z20,
+                                mu/nlog/sd_mkt_lag1, mu/nlog/sd_post_lag1, y_gap_net
+
+Total classé : 81 / 81 colonnes
+</code></pre>
+<h2 id="pourquoi-commencer-par-un-inventaire">Pourquoi commencer par un inventaire</h2>
+<p><strong>Le principe :</strong> on ne peut pas raisonner sur ce qu'on ne connaît pas. Avec 81 colonnes, personne ne les
+garde en tête. Il faut une <strong>carte</strong>.</p>
+<p><strong>Le contrôle caché :</strong> la dernière ligne, <code>81 / 81</code>. Si le total ne tombait pas juste, cela signifierait
+qu'une colonne échappe à la classification — donc qu'une variable existe sans qu'on sache à quelle famille
+elle appartient, donc sans qu'on sache si elle est légale.</p>
+<p>C'est un <strong>contrôle d'exhaustivité</strong> : simple, et il attrape les oublis.</p>
+<h2 id="la-structure-qui-saute-aux-yeux">La structure qui saute aux yeux</h2>
+<p>Regarde bien : <strong>six fenêtres × sept statistiques = 42 colonnes</strong> de sentiment, plus 12 colonnes
+d'attention. Autrement dit, <strong>54 des 81 colonnes sont la même chose répétée</strong>.</p>
+<p>C'est un point important pour comprendre le panel : il n'y a pas 81 idées différentes. Il y a environ
+<strong>dix idées</strong> (compter, moyenner, mesurer la dispersion, normaliser…) appliquées à <strong>six moments</strong> de la
+journée. Une fois les dix idées comprises, les 81 colonnes se lisent d'un coup.</p>
+<hr />
+<h1 id="chapitre-2-les-identites-comptables">Chapitre 2 — Les identités comptables</h1>
+<pre><code>gap    = Open / prev_close - 1        : 2.58e-16
+ret_oc = Close / Open - 1             : 3.05e-16
+(1+gap)(1+ret_oc) = 1 + ret_cc        : 3.33e-16
+
+y_gap == 1[gap &gt; 0]   : True
+y_oc  == 1[ret_oc &gt; 0] : True
+y_cc  == 1[ret_cc &gt; 0] : True
+</code></pre>
+<h2 id="21-la-notion-la-validation-par-redondance">2.1 — La notion : la validation par redondance</h2>
+<p><strong>L'idée générale.</strong> Quand une quantité peut être calculée de <strong>deux manières indépendantes</strong>, on la
+calcule des deux et on compare. Si les deux coïncident, les deux chemins sont probablement corrects.</p>
+<p>Cette technique est ancienne et universelle :</p>
+<table>
+<thead>
+<tr>
+<th>Domaine</th>
+<th>Application</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Comptabilité</td>
+<td>la <strong>partie double</strong> — chaque écriture au débit et au crédit, le total doit s'équilibrer</td>
+</tr>
+<tr>
+<td>Actuariat</td>
+<td>la <strong>réconciliation</strong> des provisions par deux méthodes (Chain-Ladder et Bornhuetter-Ferguson)</td>
+</tr>
+<tr>
+<td>Informatique</td>
+<td>les <strong>sommes de contrôle</strong> (checksums) sur les fichiers transférés</td>
+</tr>
+<tr>
+<td>Ici</td>
+<td><code>(1+gap)(1+ret_oc) = 1+ret_cc</code></td>
+</tr>
+</tbody>
+</table>
+<h2 id="22-pourquoi-1016-et-pas-0">2.2 — Pourquoi 10⁻¹⁶ et pas 0</h2>
+<p>Un ordinateur représente les nombres réels en <strong>virgule flottante double précision</strong> : 64 bits, dont 52
+pour la mantisse. Cela donne environ <strong>16 chiffres significatifs</strong>.</p>
+<pre><code>0,1 + 0,2 = 0,30000000000000004     ← en Python, essaie-le
+</code></pre>
+<p>Ce n'est pas un bug : 0,1 n'a pas de représentation binaire exacte, comme 1/3 n'a pas de représentation
+décimale exacte.</p>
+<p><strong>L'epsilon machine</strong> vaut environ 2,2 × 10⁻¹⁶. Toute chaîne d'opérations accumule une erreur de cet
+ordre. Tes erreurs valent 2,58 × 10⁻¹⁶ et 3,33 × 10⁻¹⁶ — <strong>exactement la précision machine</strong>.</p>
+<p>Autrement dit : les formules sont <strong>mathématiquement exactes</strong>, et l'écart observé est uniquement dû à
+l'arrondi de l'ordinateur.</p>
+<p><strong>Comment choisir un seuil de tolérance :</strong></p>
+<table>
+<thead>
+<tr>
+<th>Seuil</th>
+<th>Verdict</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>&lt; 1e-12</code></td>
+<td>erreur d'arrondi pure — formule exacte</td>
+</tr>
+<tr>
+<td><code>1e-9</code> à <code>1e-6</code></td>
+<td>suspect — probablement une différence d'arrondi intermédiaire</td>
+</tr>
+<tr>
+<td><code>&gt; 1e-6</code></td>
+<td><strong>erreur de formule</strong></td>
+</tr>
+</tbody>
+</table>
+<h2 id="23-lexemple-a-savoir-refaire-au-tableau">2.3 — L'exemple à savoir refaire au tableau</h2>
+<pre><code>AAPL — 2 janvier 2020
+  Clôture de la veille : 73,4125
+  Ouverture            : 74,0600   -&gt;  gap    = 74,0600 / 73,4125 − 1 = +0,008820
+  Clôture du jour      : 75,0875   -&gt;  ret_oc = 75,0875 / 74,0600 − 1 = +0,013874
+  Vérification : (1 + 0,008820) × (1 + 0,013874) − 1 = +0,022816
+                  ret_cc affiché                       = +0,022816
+</code></pre>
+<p>Si le jury te demande d'expliquer ta décomposition, c'est <strong>ce calcul</strong> que tu écris au tableau. Trois
+lignes, aucune ambiguïté.</p>
+<h2 id="24-la-masse-neutre-de-finbert">2.4 — La masse « neutre » de FinBERT</h2>
+<pre><code>MASSE 'NEUTRE' DE FinBERT (= 1 - pos - neg)
+  moyenne : 0.764   médiane : 0.765
+</code></pre>
+<p>FinBERT place en moyenne <strong>76 %</strong> de sa probabilité sur « neutre » (au niveau des moyennes journalières —
+au niveau des messages individuels c'était 80,7 %, cf. Cours 1).</p>
+<p><strong>Ce que cela implique numériquement.</strong> Puisque <code>mu = pos − neg</code> et que <code>pos + neg ≈ 0,24</code>, la valeur
+maximale que <code>mu</code> pourrait atteindre est d'environ 0,24. Elle vaut en moyenne 0,11. <strong>Ce n'est pas que la
+foule soit tiède</strong> — c'est que l'échelle de mesure est comprimée.</p>
+<p>C'est important pour interpréter les coefficients plus tard : un « écart d'une unité de <code>mu</code> » n'existe
+pas dans tes données. C'est aussi pourquoi on normalise (ch. 3).</p>
+<hr />
+<h1 id="chapitre-3-les-statistiques-descriptives">Chapitre 3 — Les statistiques descriptives</h1>
+<h2 id="31-les-variables-de-marche">3.1 — Les variables de marché</h2>
+<pre><code>Ticker         AAPL   AMZN   META   NVDA   TSLA
+gap     mean  0.066  0.124 -0.025  0.219  0.402      (en %)
+        std   1.539  1.417  1.872  1.926  2.978
+ret_oc  mean  0.107 -0.017  0.056  0.084  0.129
+        std   1.704  1.687  1.827  2.674  3.627
+ret_cc  mean  0.173  0.106  0.033  0.304  0.531
+        std   2.325  2.142  2.686  3.319  4.683
+vol_20d mean  2.052  1.976  2.392  2.996  4.246
+</code></pre>
+<h3 id="comment-lire-un-tableau-moyenne-ecart-type">Comment lire un tableau moyenne / écart-type</h3>
+<p>La <strong>moyenne</strong> dit <em>« vers quoi ça tend »</em>. L'<strong>écart-type</strong> dit <em>« de combien ça s'écarte »</em>.</p>
+<p><strong>Les deux ensemble décrivent la distribution.</strong></p>
+<p>Prends TSLA : gap moyen +0,402 %, écart-type 2,978 %. En supposant une distribution à peu près normale
+(hypothèse discutable en finance, mais utile pour l'intuition) :</p>
+<pre><code>environ 68 % des nuits :  entre −2,58 %  et  +3,38 %      (moyenne ± 1 écart-type)
+environ 95 % des nuits :  entre −5,55 %  et  +6,36 %      (moyenne ± 2 écarts-types)
+</code></pre>
+<p><strong>Trois lectures immédiates :</strong></p>
+<p><strong>1. TSLA gagnait +0,40 % chaque nuit en moyenne.</strong> Sur 548 jours, cela composerait à
+(1,004)⁵⁴⁸ ≈ <strong>× 8,9</strong>. C'est la bulle Tesla de 2020-2021, et cela pose un problème pour le backtest :
+une stratégie qui achète tous les soirs capterait déjà cette prime sans rien prédire.</p>
+<p><strong>2. La volatilité varie du simple au double</strong> : 1,4 % pour AMZN, 3,0 % pour TSLA. Un gap de +2 % est
+banal pour TSLA et exceptionnel pour AMZN.</p>
+<p><strong>3. L'écart-type dépasse largement la moyenne partout.</strong> Pour AAPL : moyenne 0,066 %, écart-type 1,539 %
+— un rapport de <strong>23</strong>. Cela signifie que le mouvement d'une nuit donnée est presque entièrement du
+<strong>bruit</strong> ; la tendance ne se voit qu'en agrégeant des centaines de jours.</p>
+<p>C'est <strong>la difficulté fondamentale de la prévision financière</strong> : le rapport signal/bruit est
+catastrophique. C'est pourquoi une corrélation de 0,15 y est considérée comme forte, alors qu'elle serait
+ridicule en biologie ou en psychométrie.</p>
+<h2 id="32-les-variables-de-sentiment-et-le-probleme-de-niveau">3.2 — Les variables de sentiment, et le problème de niveau</h2>
+<pre><code>Ticker                  AAPL     AMZN     META     NVDA      TSLA
+mu_night_full  mean   0.0945   0.1170   0.1139   0.1627    0.0449
+               std    0.0423   0.0489   0.0668   0.0783    0.0323
+n_night_full   mean    775.3    349.0    217.3    184.0    1604.7
+
+rapport max/min = 3.6x
+</code></pre>
+<p><strong>NVDA a un sentiment moyen 3,6 fois supérieur à TSLA.</strong></p>
+<h3 id="pourquoi-ce-nest-pas-une-information-sur-les-titres">Pourquoi ce n'est pas une information sur les titres</h3>
+<p>Ce n'est pas que la foule aime 3,6 fois plus NVDA. C'est que les <strong>communautés écrivent différemment</strong> :</p>
+<ul>
+<li>les messages TSLA sont plus polémiques, plus chargés en vocabulaire que FinBERT classe en négatif ;</li>
+<li>les messages NVDA sont plus techniques et enthousiastes.</li>
+</ul>
+<p><strong>C'est un biais de mesure lié à l'instrument</strong>, pas une propriété du marché.</p>
+<h3 id="le-calcul-qui-rend-le-probleme-concret">Le calcul qui rend le problème concret</h3>
+<p>Que vaut un sentiment de <strong>0,12</strong> ?</p>
+<pre><code>Pour NVDA :  (0,12 − 0,1627) / 0,0783  =  −0,55 écart-type   -&gt;  MÉDIOCRE
+Pour TSLA :  (0,12 − 0,0449) / 0,0323  =  +2,33 écarts-types -&gt;  EXCEPTIONNEL
+</code></pre>
+<p><strong>Le même nombre veut dire deux choses opposées.</strong> La valeur brute ne signifie rien hors contexte.</p>
+<h3 id="ce-que-ca-impose">Ce que ça impose</h3>
+<p>Toute analyse doit être faite <strong>titre par titre</strong>, ou sur des variables <strong>normalisées par titre</strong>. C'est
+la justification :</p>
+<ul>
+<li>des quintiles intra-ticker (ch. 9-10)</li>
+<li>du z-score glissant du notebook 05</li>
+<li>des corrélations calculées séparément par titre (ch. 12)</li>
+</ul>
+<hr />
+<h1 id="chapitre-4-la-densite-du-corpus">Chapitre 4 — La densité du corpus</h1>
+<pre><code>        minimum    q25  médiane  moyenne     q75  maximum
+AAPL       30.0  388.0    571.0    775.0   858.0   6898.0
+AMZN      100.0  198.0    260.0    349.0   360.0   9633.0
+META       33.0   76.0    108.0    217.0   171.0  12337.0
+NVDA        0.0   60.0     96.0    184.0   199.0   5546.0
+TSLA        0.0  701.0   1138.0   1605.0  1902.0  16722.0
+
+Nuits sans aucun message : 4 sur 2 740
+Nuits avec moins de 10 messages : 7
+</code></pre>
+<h2 id="41-lire-des-quantiles">4.1 — Lire des quantiles</h2>
+<p>Un <strong>quantile</strong> coupe la distribution en parts. Le q25 (premier quartile) est la valeur en dessous de
+laquelle se trouvent 25 % des observations.</p>
+<p>Pour META : q25 = 76, médiane = 108, q75 = 171. Donc <strong>la moitié des nuits</strong> ont entre 76 et 171 messages.</p>
+<h2 id="42-le-signe-qui-ne-trompe-pas-moyenne-mediane">4.2 — Le signe qui ne trompe pas : moyenne ≫ médiane</h2>
+<table>
+<thead>
+<tr>
+<th>Ticker</th>
+<th>médiane</th>
+<th>moyenne</th>
+<th>rapport</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>META</td>
+<td>108</td>
+<td>217</td>
+<td><strong>2,01</strong></td>
+</tr>
+<tr>
+<td>NVDA</td>
+<td>96</td>
+<td>184</td>
+<td><strong>1,92</strong></td>
+</tr>
+<tr>
+<td>AAPL</td>
+<td>571</td>
+<td>775</td>
+<td>1,36</td>
+</tr>
+<tr>
+<td>TSLA</td>
+<td>1 138</td>
+<td>1 605</td>
+<td>1,41</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Quand la moyenne dépasse largement la médiane, la distribution est asymétrique à droite</strong> — il y a une
+longue queue de valeurs très élevées qui tirent la moyenne vers le haut sans bouger la médiane.</p>
+<p>C'est la signature d'une <strong>loi log-normale</strong> : le logarithme de la variable suit une loi normale.</p>
+<blockquote>
+<p><strong>Pourquoi la log-normale apparaît si souvent.</strong> Elle émerge dès qu'un phénomène résulte d'effets
+<strong>multiplicatifs</strong> plutôt qu'additifs. Une nuit d'actualité intense n'ajoute pas 200 messages : elle
+<strong>multiplie</strong> l'activité par 5 ou 10. Le théorème central limite appliqué à des produits (donc à des
+sommes de logarithmes) donne une log-normale.</p>
+<p>On la retrouve partout : tailles d'entreprises, revenus, durées de sinistres en assurance, tailles de
+villes.</p>
+</blockquote>
+<h2 id="43-lamplitude-extreme">4.3 — L'amplitude extrême</h2>
+<p>META : de <strong>33</strong> à <strong>12 337</strong> messages. Un facteur <strong>374</strong>.</p>
+<p><strong>Ce que cela impliquerait pour un modèle linéaire.</strong> Une régression minimise la somme des <strong>carrés</strong> des
+erreurs. Une observation à 12 337 pèse (12 337/108)² ≈ <strong>13 000 fois</strong> plus qu'une observation médiane.
+Le modèle serait entièrement dicté par une poignée de jours d'exception.</p>
+<p><strong>D'où le passage au logarithme</strong> (<code>nlog</code>), qui transforme les rapports en différences et rend les
+observations comparables.</p>
+<h2 id="44-les-4-nuits-vides">4.4 — Les 4 nuits vides</h2>
+<pre><code>Nuits sans aucun message : 4 sur 2 740     (0,15 %)
+</code></pre>
+<p>Sur 2 740 observations, <strong>4 seulement</strong> sont muettes. Le corpus est donc quasi complet.</p>
+<p><strong>À comparer avec l'ancien corpus 2023-2026 : médiane de 2 messages par jour.</strong> Là-bas, la majorité des
+observations étaient inexploitables. Ici, 99,85 % le sont.</p>
+<p>C'est <strong>le fait qui justifie tout le changement de corpus</strong>, et il faut le donner en chiffres, pas en
+impressions.</p>
+<hr />
+<h1 id="chapitre-5-prix-vs-sentiment-le-piege-de-la-regression-fallacieuse">Chapitre 5 — Prix vs sentiment : le piège de la régression fallacieuse</h1>
+<p>Cette cellule produit une figure. Elle est descriptive — mais elle porte un piège méthodologique
+important.</p>
+<h2 id="51-le-piege">5.1 — Le piège</h2>
+<p>Superposer un <strong>prix</strong> et un <strong>sentiment</strong> donne presque toujours une impression de lien fort, même quand
+il n'y en a aucun.</p>
+<p><strong>Pourquoi.</strong> Un prix est une variable <strong>en niveau</strong>, avec une tendance. Un sentiment est une variable
+<strong>stationnaire</strong>, qui oscille autour d'une moyenne. Deux séries qui montent ensemble apparaissent
+corrélées — sans qu'il y ait de relation causale.</p>
+<h2 id="52-la-regression-fallacieuse-granger-newbold-1974">5.2 — La régression fallacieuse (Granger &amp; Newbold, 1974)</h2>
+<p><strong>L'expérience célèbre.</strong> Granger et Newbold ont simulé des paires de séries <strong>totalement
+indépendantes</strong>, chacune étant une marche aléatoire :</p>
+<pre><code>x(t) = x(t−1) + bruit_1(t)
+y(t) = y(t−1) + bruit_2(t)          ← aucun lien entre les deux
+</code></pre>
+<p>Puis ils ont régressé <code>y</code> sur <code>x</code>. Résultat : dans <strong>environ 75 %</strong> des cas, le coefficient était
+« significatif » au seuil de 5 %, avec des R² souvent supérieurs à 0,7.</p>
+<p><strong>Alors que les séries n'ont strictement aucun rapport.</strong></p>
+<p><strong>L'explication.</strong> Les tests statistiques classiques supposent des données <strong>stationnaires</strong> (moyenne et
+variance constantes). Une marche aléatoire ne l'est pas : sa variance croît avec le temps. Appliquer un
+test conçu pour du stationnaire à du non-stationnaire donne des résultats faux dans le sens du
+faux-positif.</p>
+<blockquote>
+<p><strong>L'exemple pédagogique classique.</strong> Sur 1990-2010, la consommation de fromage aux États-Unis et le
+nombre de personnes mortes étranglées dans leurs draps sont corrélées à <strong>0,95</strong>. Les deux augmentent
+avec le temps et la population. Il n'y a évidemment aucun lien.</p>
+</blockquote>
+<h2 id="53-la-correction-appliquee">5.3 — La correction appliquée</h2>
+<p>Le notebook ne trace pas le prix brut : il trace le <strong>gap cumulé</strong> et un sentiment <strong>lissé sur 10 jours</strong>.</p>
+<p><strong>Pourquoi le gap cumulé ?</strong> Parce que c'est exactement la quantité que le sentiment est censé prédire. Si
+le lien existe, il doit se voir là — et pas seulement sur le prix total, qui monte de toute façon.</p>
+<p><strong>Une observation importante sur cette figure :</strong> la courbe du gap cumulé monte régulièrement. Cela révèle
+une <strong>prime de risque overnight</strong> — détenir le titre pendant la nuit rapporte en moyenne, indépendamment
+de tout signal.</p>
+<p>C'est un phénomène documenté : sur les grandes actions américaines, une part majoritaire du rendement
+historique s'est formée <strong>marché fermé</strong>. Et cela a une conséquence directe pour ton backtest :</p>
+<blockquote>
+<p><strong>Une stratégie qui achèterait tous les soirs, sans rien prédire du tout, capterait déjà cette prime.</strong>
+Le modèle doit donc être comparé à cette référence — c'est le « Long systématique du gap » du
+notebook 08 — et pas seulement au buy &amp; hold.</p>
+</blockquote>
+<hr />
+<h1 id="chapitre-6-la-correlation-de-pearson">Chapitre 6 — La corrélation de Pearson</h1>
+<h2 id="61-la-notion">6.1 — La notion</h2>
+<p>La corrélation mesure <strong>à quel point deux variables varient ensemble</strong>.</p>
+<pre><code>                  covariance(X, Y)
+rho(X, Y)  =  ──────────────────────────
+              écart-type(X) × écart-type(Y)
+</code></pre>
+<p>où la covariance est :</p>
+<pre><code>                     1     n
+covariance(X,Y)  =  ─── ×  Σ  ( x_i − moyenne(X) ) × ( y_i − moyenne(Y) )
+                     n    i=1
+</code></pre>
+<h2 id="62-comprendre-la-formule-sans-les-maths">6.2 — Comprendre la formule sans les maths</h2>
+<p>Regarde le terme <code>(x_i − moyenne_X) × (y_i − moyenne_Y)</code>. Pour chaque observation, il vaut :</p>
+<table>
+<thead>
+<tr>
+<th>Situation</th>
+<th>(x − x̄)</th>
+<th>(y − ȳ)</th>
+<th>produit</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>X au-dessus de sa moyenne, Y aussi</td>
+<td>+</td>
+<td>+</td>
+<td><strong>positif</strong></td>
+</tr>
+<tr>
+<td>X en dessous, Y en dessous</td>
+<td>−</td>
+<td>−</td>
+<td><strong>positif</strong></td>
+</tr>
+<tr>
+<td>X au-dessus, Y en dessous</td>
+<td>+</td>
+<td>−</td>
+<td><strong>négatif</strong></td>
+</tr>
+</tbody>
+</table>
+<p>Si les deux variables évoluent dans le même sens, la plupart des produits sont positifs et la somme est
+grande. Si elles n'ont aucun rapport, les produits positifs et négatifs se compensent et la somme est
+proche de zéro.</p>
+<p><strong>La division par les écarts-types</strong> rend le résultat sans unité et borné entre −1 et +1. C'est ce qui
+permet de comparer une corrélation « sentiment/gap » à une corrélation « taille/poids ».</p>
+<h2 id="63-ce-que-la-correlation-ne-mesure-pas">6.3 — Ce que la corrélation NE mesure pas</h2>
+<p><strong>Trois limites majeures, à connaître absolument.</strong></p>
+<h3 id="limite-1-elle-ne-mesure-que-le-lien-lineaire">Limite 1 — Elle ne mesure que le lien LINÉAIRE</h3>
+<pre><code>X  = −3, −2, −1, 0, 1, 2, 3
+Y  =  9,  4,  1, 0, 1, 4, 9        (Y = X², lien parfait et déterministe)
+
+corrélation de Pearson = 0,00
+</code></pre>
+<p>Un lien parfait, une corrélation nulle. La corrélation ne voit que les droites.</p>
+<p><strong>C'est pourquoi le notebook fait aussi une analyse par quintiles</strong> (ch. 9) : elle ne suppose aucune forme.</p>
+<h3 id="limite-2-elle-ne-dit-rien-de-la-causalite">Limite 2 — Elle ne dit rien de la causalité</h3>
+<p>Corrélation ≠ causalité. Trois explications possibles pour toute corrélation observée :</p>
+<table>
+<thead>
+<tr>
+<th>Explication</th>
+<th>Exemple ici</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>X cause Y</td>
+<td>le sentiment influence le prix d'ouverture</td>
+</tr>
+<tr>
+<td>Y cause X</td>
+<td>le prix (pré-marché) influence ce que les gens écrivent</td>
+</tr>
+<tr>
+<td>Z cause les deux</td>
+<td>une nouvelle publique fait à la fois monter le prix et écrire les gens</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Le chapitre 7 est entièrement consacré à départager ces cas</strong> — c'est le cœur méthodologique du mémoire.</p>
+<h3 id="limite-3-elle-est-sensible-aux-valeurs-extremes">Limite 3 — Elle est sensible aux valeurs extrêmes</h3>
+<p>Un seul point aberrant peut créer ou détruire une corrélation. D'où l'usage complémentaire du Spearman
+(ch. 13) et des quintiles (ch. 9).</p>
+<h2 id="64-quel-ordre-de-grandeur-est-bon">6.4 — Quel ordre de grandeur est « bon » ?</h2>
+<p><strong>Cela dépend entièrement du domaine.</strong></p>
+<table>
+<thead>
+<tr>
+<th>Domaine</th>
+<th>ρ typique d'un effet réel</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Physique (loi déterministe)</td>
+<td>0,99</td>
+</tr>
+<tr>
+<td>Psychométrie</td>
+<td>0,4 – 0,6</td>
+</tr>
+<tr>
+<td>Épidémiologie</td>
+<td>0,2 – 0,4</td>
+</tr>
+<tr>
+<td><strong>Finance, prévision journalière</strong></td>
+<td><strong>0,03 – 0,15</strong></td>
+</tr>
+</tbody>
+</table>
+<p><strong>Pourquoi si bas en finance ?</strong> Parce que le marché est <strong>compétitif</strong>. Si une variable prédisait le prix
+à 0,5, des milliers de professionnels l'exploiteraient immédiatement, et la corrélation disparaîtrait
+— c'est le mécanisme même de l'efficience.</p>
+<blockquote>
+<p><strong>Une corrélation de 0,157 en finance journalière est donc un résultat fort.</strong> Et une corrélation de
+0,60 serait <strong>suspecte</strong> : il faudrait chercher la fuite d'information avant de se réjouir.</p>
+</blockquote>
+<hr />
+<h1 id="chapitre-7-predictif-vs-contemporain">Chapitre 7 — Prédictif vs contemporain ⭐</h1>
+<p><strong>C'est la section la plus importante du notebook 04 pour la crédibilité du mémoire.</strong></p>
+<h2 id="71-le-tableau-brut">7.1 — Le tableau brut</h2>
+<pre><code>A) FENÊTRES PRÉDICTIVES
+ Cible       Fenetre    n     rho   p_value              STATUT
+   gap        mu_pre 2734  0.1816  1.0e-21  PRÉDICTIVE (limite)
+   gap mu_night_full 2736  0.1572  1.3e-16  PRÉDICTIVE (limite)
+   gap  mu_overnight 2735  0.0967  4.1e-07  PRÉDICTIVE
+ret_oc        mu_pre 2734  0.0128  5.0e-01  PRÉDICTIVE (limite)
+ret_oc mu_night_full 2736 -0.0103  5.9e-01  PRÉDICTIVE (limite)
+ret_oc  mu_overnight 2735 -0.0274  1.5e-01  PRÉDICTIVE
+
+B) FENÊTRES CONTEMPORAINES / POSTÉRIEURES — À EXCLURE
+ret_oc        mu_mkt 2736  0.2030  7.9e-27  CONTEMPORAINE
+ret_oc       mu_post 2733  0.1699  3.7e-19  CONTEMPORAINE
+ret_cc        mu_mkt 2736  0.1934  1.8e-24  CONTEMPORAINE
+</code></pre>
+<h2 id="72-le-piege-et-pourquoi-presque-tout-le-monde-y-tombe">7.2 — Le piège, et pourquoi presque tout le monde y tombe</h2>
+<p>Regarde le tableau complet, sans distinction : <strong>la plus forte corrélation de tout le notebook est
+<code>mu_mkt → ret_oc = 0,2030</code></strong>. Il serait tentant de l'annoncer comme le meilleur résultat.</p>
+<p><strong>Ce serait une faute grave.</strong></p>
+<p><code>mu_mkt</code> agrège les messages postés <strong>de 10h à 16h</strong>. <code>ret_oc</code> est le rendement <strong>de 9h30 à 16h</strong>. Les
+deux se déroulent <strong>au même moment</strong>.</p>
+<p>Cette corrélation dit donc simplement :</p>
+<blockquote>
+<p><em>« Quand le prix monte pendant la séance, les gens tweetent positivement pendant la séance. »</em></p>
+</blockquote>
+<p>C'est une <strong>réaction</strong>, pas une prédiction. Pour l'exploiter, il faudrait connaître à 9h30 les messages
+qui seront écrits entre 10h et 16h. Impossible.</p>
+<p><code>mu_post</code> est pire encore : les messages sont postés <strong>après</strong> la clôture, donc après que <code>ret_oc</code> soit
+définitivement figé. <strong>La flèche causale est inversée.</strong></p>
+<h2 id="73-la-regle-formelle">7.3 — La règle formelle</h2>
+<blockquote>
+<p>Une fenêtre de texte est utilisable pour prédire une cible <strong>si et seulement si elle se ferme avant que
+la cible ne commence à se former.</strong></p>
+</blockquote>
+<p>Les trois cibles démarrent au plus tard à l'ouverture (9h30). Donc :</p>
+<table>
+<thead>
+<tr>
+<th>Fenêtre</th>
+<th>Se ferme à</th>
+<th>≤ 9h30 ?</th>
+<th>Statut</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>overnight</code></td>
+<td>00h00</td>
+<td>oui</td>
+<td><strong>prédictive</strong></td>
+</tr>
+<tr>
+<td><code>pre</code></td>
+<td>09h30</td>
+<td>oui, tout juste</td>
+<td><strong>prédictive (limite)</strong></td>
+</tr>
+<tr>
+<td><code>night_full</code></td>
+<td>09h30</td>
+<td>oui, tout juste</td>
+<td><strong>prédictive (limite)</strong></td>
+</tr>
+<tr>
+<td><code>open30</code></td>
+<td>10h00</td>
+<td>non</td>
+<td>contemporaine</td>
+</tr>
+<tr>
+<td><code>mkt</code></td>
+<td>16h00</td>
+<td>non</td>
+<td>contemporaine</td>
+</tr>
+<tr>
+<td><code>post</code></td>
+<td>00h00 (J+1)</td>
+<td>non</td>
+<td>postérieure</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Pourquoi coder la règle plutôt que l'appliquer de tête.</strong> Parce qu'une règle codée ne s'oublie pas, se
+vérifie, et se documente. Le jour où tu ajoutes une septième fenêtre, la classification se fait
+automatiquement.</p>
+<h2 id="74-le-gradient-qui-valide-la-construction">7.4 — Le gradient qui valide la construction</h2>
+<p>Regarde les trois corrélations prédictives sur le gap :</p>
+<table>
+<thead>
+<tr>
+<th>Fenêtre</th>
+<th>Se ferme</th>
+<th>ρ avec le gap</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>mu_overnight</code></td>
+<td>minuit</td>
+<td><strong>+0,097</strong></td>
+</tr>
+<tr>
+<td><code>mu_night_full</code></td>
+<td>9h30</td>
+<td><strong>+0,157</strong></td>
+</tr>
+<tr>
+<td><code>mu_pre</code></td>
+<td>9h30</td>
+<td><strong>+0,182</strong></td>
+</tr>
+</tbody>
+</table>
+<p><strong>Plus l'information est fraîche, plus elle est informative.</strong> Les messages de 8h du matin en disent plus
+sur l'ouverture que ceux de 21h la veille.</p>
+<p><strong>Pourquoi c'est important.</strong> Ce gradient est <strong>cohérent avec la microstructure des marchés</strong>, et il est
+difficile à obtenir par hasard. Si les corrélations étaient toutes identiques, ou dans le désordre, on
+soupçonnerait un artefact. Là, elles s'ordonnent exactement comme la théorie le prédit.</p>
+<p>C'est ce qu'on appelle un <strong>contrôle de validité de construit</strong> (<em>construct validity</em>) : la mesure se
+comporte comme le concept qu'elle prétend mesurer.</p>
+<h2 id="75-le-resultat-negatif-dans-le-meme-tableau">7.5 — Le résultat négatif, dans le même tableau</h2>
+<pre><code>ret_oc mu_night_full 2736 -0.0103  p = 5.9e-01
+</code></pre>
+<p>Même variable, mêmes jours, cible différente : <strong>le signal disparaît complètement</strong>. Une p-value de 0,59
+signifie qu'un tel résultat arriverait 59 fois sur 100 par pur hasard.</p>
+<p><strong>Ces deux lignes côte à côte — <code>gap</code> à +0,157 et <code>ret_oc</code> à −0,010 — sont le cœur du mémoire.</strong></p>
+<h2 id="76-le-paragraphe-a-recopier">7.6 — Le paragraphe à recopier</h2>
+<blockquote>
+<p>« Les corrélations les plus élevées obtenues sans précaution (μ_mkt → ret_oc = 0,203 ;
+μ_post → ret_cc = 0,170) correspondent à des fenêtres de texte contemporaines ou postérieures à la
+formation du rendement. Elles mesurent la réaction du sentiment au prix, et non l'inverse. Elles ne
+constituent pas un signal exploitable et sont exclues de l'espace des variables explicatives. Seules les
+fenêtres se clôturant au plus tard à l'ouverture sont retenues. »</p>
+</blockquote>
+<p><strong>Pourquoi afficher le bloc B au lieu de le cacher ?</strong> Parce que montrer qu'on a <strong>vu</strong> ces corrélations,
+compris pourquoi elles ne valent rien, et décidé de les écarter, vaut infiniment mieux que de faire comme
+si elles n'existaient pas. C'est la différence entre un travail rigoureux et un travail naïf.</p>
+<hr />
+<h1 id="chapitre-8-la-heatmap-et-la-multicolinearite">Chapitre 8 — La heatmap et la multicolinéarité</h1>
+<p>La matrice de corrélation croise toutes les variables entre elles. Elle sert <strong>deux buts distincts</strong>.</p>
+<h2 id="but-1-voir-le-signal">But 1 — Voir le signal</h2>
+<p>Les trois dernières colonnes (<code>gap</code>, <code>ret_oc</code>, <code>ret_cc</code>) montrent le lien avec les cibles. La colonne
+<code>gap</code> est nettement colorée ; la colonne <code>ret_oc</code> est blanche.</p>
+<h2 id="but-2-detecter-la-multicolinearite-entre-variables-explicatives">But 2 — Détecter la multicolinéarité entre variables explicatives</h2>
+<p>C'est le bloc en haut à gauche, et c'est là que se joue l'interprétabilité des modèles.</p>
+<p><strong>Le problème.</strong> <code>night_full</code> est construite <strong>à partir de</strong> <code>overnight</code> et <code>pre</code> :</p>
+<pre><code>mu_night_full = ( n_overnight × mu_overnight  +  n_pre × mu_pre ) / n_night_full
+</code></pre>
+<p>Les trois variables sont donc <strong>liées par construction</strong> et fortement corrélées entre elles.</p>
+<h3 id="ce-qui-se-passe-si-on-les-met-toutes-les-trois">Ce qui se passe si on les met toutes les trois</h3>
+<p>Une régression cherche des coefficients β tels que <code>y ≈ β₁·A + β₂·B + β₃·C</code>. Si <code>C</code> est une combinaison
+de <code>A</code> et <code>B</code>, il existe une <strong>infinité</strong> de solutions équivalentes. L'algorithme en choisit une, souvent
+avec des coefficients énormes et de signes absurdes.</p>
+<p><strong>La conséquence pratique :</strong> l'AUC reste bonne (la <em>prédiction</em> n'est pas abîmée), mais les coefficients
+deviennent <strong>ininterprétables</strong>. Pour un mémoire, c'est rédhibitoire — tu veux pouvoir dire <em>« un
+écart-type de sentiment supplémentaire multiplie la cote par 1,35 »</em>.</p>
+<h3 id="la-mesure-le-vif">La mesure : le VIF</h3>
+<pre><code>              1
+VIF(j)  =  ────────
+            1 − R²(j)
+</code></pre>
+<p>où <code>R²(j)</code> est le R² de la régression de la variable <em>j</em> sur <strong>toutes les autres</strong>.</p>
+<p><strong>Interprétation :</strong> le VIF dit de combien la variance du coefficient est <strong>gonflée</strong> par la colinéarité.
+Un VIF de 100 signifie que l'écart-type du coefficient est √100 = 10 fois plus grand qu'il ne devrait
+l'être.</p>
+<table>
+<thead>
+<tr>
+<th>VIF</th>
+<th>Verdict</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1</td>
+<td>aucune colinéarité</td>
+</tr>
+<tr>
+<td>&lt; 5</td>
+<td>acceptable</td>
+</tr>
+<tr>
+<td>5 – 10</td>
+<td>à surveiller</td>
+</tr>
+<tr>
+<td><strong>&gt; 10</strong></td>
+<td><strong>problématique</strong></td>
+</tr>
+</tbody>
+</table>
+<p><strong>Dans ton notebook 06</strong> : <code>ret_cc_lag1</code> a un VIF de <strong>1 516</strong>, <code>z_mu_night_full</code> de <strong>101</strong>. La cause est
+mécanique : <code>ret_cc = (1+gap)(1+ret_oc)−1</code> et <code>mu = pos − neg</code> sont des identités exactes.</p>
+<h3 id="la-regle-pour-la-suite">La règle pour la suite</h3>
+<blockquote>
+<p>Garder <strong>soit</strong> <code>night_full</code> (version agrégée), <strong>soit</strong> le couple <code>overnight</code> + <code>pre</code> (version
+décomposée). <strong>Jamais les trois.</strong></p>
+<p>Et de même : soit <code>mu</code>, soit le couple (<code>pos</code>, <code>neg</code>). Jamais les trois.</p>
+</blockquote>
+<hr />
+<h1 id="chapitre-9-les-quintiles">Chapitre 9 — Les quintiles ⭐</h1>
+<h2 id="91-la-notion">9.1 — La notion</h2>
+<p>Un <strong>quintile</strong> est un cinquième de la distribution. On trie les observations selon une variable, on les
+coupe en cinq paquets de taille égale, et on regarde ce qui se passe dans chacun.</p>
+<pre><code>Q1 = les 20 % de jours au sentiment le plus NÉGATIF
+Q2 = les 20 % suivants
+Q3 = les 20 % du milieu
+Q4 = les 20 % suivants
+Q5 = les 20 % de jours au sentiment le plus POSITIF
+</code></pre>
+<h2 id="92-pourquoi-cest-superieur-a-la-correlation">9.2 — Pourquoi c'est supérieur à la corrélation</h2>
+<p>La corrélation résume la relation en <strong>un seul chiffre</strong>, en supposant qu'elle est <strong>linéaire</strong>.</p>
+<p>Les quintiles ne supposent <strong>rien</strong>. C'est une méthode <strong>non paramétrique</strong> : elle ne postule aucune forme
+de relation. Si l'effet est concentré aux extrêmes, en escalier, ou en U, les quintiles le montrent ; la
+corrélation le rate.</p>
+<p><strong>Autre avantage : la lisibilité.</strong> « ρ = 0,157 » ne parle à personne. « Quand le sentiment est dans les
+20 % les plus négatifs, l'action ouvre en hausse 39 % du temps ; quand il est dans les 20 % les plus
+positifs, 74 % du temps » — tout le monde comprend.</p>
+<h2 id="93-le-resultat">9.3 — Le résultat</h2>
+<pre><code>      n  gap_moy  pct_gap_pos  seance_moy  pct_seance_pos  cc_moy
+Q1  549   -0.717         39.3       0.194            52.8  -0.526
+Q2  545   -0.016         53.9      -0.018            48.4  -0.033
+Q3  548    0.452         63.1      -0.131            48.2   0.318
+Q4  545    0.452         63.9       0.182            52.7   0.637
+Q5  549    0.612         74.1       0.135            50.6   0.752
+
+Écart Q5-Q1 sur le GAP    : +34.8 points
+Écart Q5-Q1 sur la SÉANCE :  -2.2 points
+</code></pre>
+<p><strong>Ces deux colonnes côte à côte sont ta figure principale.</strong></p>
+<ul>
+<li><code>pct_gap_pos</code> s'étale sur <strong>34,8 points</strong> : 39,3 → 74,1</li>
+<li><code>pct_seance_pos</code> oscille entre 48,2 et 52,8 <strong>sans direction</strong> : c'est du pile ou face</li>
+</ul>
+<p>Même variable explicative, mêmes jours, deux cibles. L'une est prévisible, l'autre non.</p>
+<h2 id="94-ce-que-la-forme-de-la-relation-nous-apprend">9.4 — Ce que la forme de la relation nous apprend</h2>
+<p>Regarde <code>gap_moy</code> : −0,717 / −0,016 / +0,452 / +0,452 / +0,612.</p>
+<p><strong>Q3 et Q4 sont identiques.</strong> L'essentiel de l'écart vient des <strong>extrêmes</strong>, surtout de Q1.</p>
+<h3 id="consequence-1-les-modeles-lineaires-vont-sous-performer">Conséquence 1 : les modèles linéaires vont sous-performer</h3>
+<p>Une régression logistique suppose un effet <strong>constant par unité</strong> de sentiment. Elle est structurellement
+incapable de représenter « rien au milieu, beaucoup aux bords ».</p>
+<p><strong>D'où la décision du notebook 06 :</strong> tester aussi des <strong>arbres de décision</strong>, qui découpent l'espace en
+zones et peuvent apprendre « si <code>z &lt; −1,5</code> alors probabilité = 0,35 ».</p>
+<p><em>(Sur tes données, les arbres n'ont finalement pas fait mieux — 0,670 contre 0,671. C'est un résultat en
+soi : la relation, bien que non linéaire, est suffisamment simple pour qu'un modèle linéaire la capte.)</em></p>
+<h3 id="consequence-2-une-strategie-ne-doit-pas-trader-tous-les-jours">Conséquence 2 : une stratégie ne doit pas trader tous les jours</h3>
+<p>Si Q2, Q3 et Q4 n'apportent rien, y prendre position ne fait que payer des frais. <strong>D'où la « zone
+neutre » du backtest</strong> : on ne trade que Q1 et Q5.</p>
+<h3 id="consequence-3-lasymetrie-negative">Conséquence 3 : l'asymétrie négative</h3>
+<pre><code>Q1 : gap moyen −0,717 %       écart à la moyenne générale : très grand
+Q5 : gap moyen +0,612 %       écart : plus modeste
+</code></pre>
+<p>Comme la moyenne inconditionnelle des gaps est <strong>positive</strong> (marché haussier), le <strong>pessimisme nocturne
+est relativement plus informatif que l'optimisme</strong>.</p>
+<p>C'est cohérent avec la littérature sur l'asymétrie des mauvaises nouvelles (<strong>Hong &amp; Stein, 1999</strong>) : les
+investisseurs pessimistes sont souvent empêchés d'agir (la vente à découvert est coûteuse et risquée),
+donc leur information met plus de temps à s'incorporer — et se libère d'un coup à l'ouverture.</p>
+<p><strong>C'est un excellent paragraphe de discussion.</strong></p>
+<h2 id="95-le-test-par-titre-la-vraie-robustesse">9.5 — Le test par titre : la vraie robustesse</h2>
+<pre><code>AAPL  : Q1= 31.8%  Q2= 51.4%  Q3= 66.4%  Q4= 61.5%  Q5= 72.7%   écart = +40.9
+AMZN  : Q1= 40.0%  Q2= 59.6%  Q3= 67.3%  Q4= 63.3%  Q5= 72.7%   écart = +32.7
+META  : Q1= 41.8%  Q2= 58.7%  Q3= 50.9%  Q4= 58.7%  Q5= 65.5%   écart = +23.7
+NVDA  : Q1= 44.5%  Q2= 50.5%  Q3= 66.1%  Q4= 68.8%  Q5= 77.3%   écart = +32.8
+TSLA  : Q1= 38.5%  Q2= 49.5%  Q3= 65.1%  Q4= 67.0%  Q5= 82.6%   écart = +44.1
+</code></pre>
+<p><strong>Les cinq titres vont dans le même sens, sans exception.</strong></p>
+<p><strong>Pourquoi c'est beaucoup plus convaincant que le chiffre global.</strong> Un résultat agrégé peut toujours
+provenir d'un artefact de mélange (voir ch. 10). Cinq réplications indépendantes, non.</p>
+<p>C'est le principe de la <strong>réplication</strong> — le fondement de la méthode expérimentale. Un résultat qui ne se
+réplique pas n'est pas un résultat.</p>
+<p><em>(META brise légèrement la monotonie en Q3 avec 50,9 %. C'est normal : avec 110 observations par
+quintile, l'incertitude sur chaque pourcentage est d'environ ±9 points. Un petit décrochage est attendu.)</em></p>
+<hr />
+<h1 id="chapitre-10-le-biais-de-niveau-et-le-paradoxe-de-simpson">Chapitre 10 — Le biais de niveau et le paradoxe de Simpson</h1>
+<h2 id="101-le-probleme">10.1 — Le problème</h2>
+<p>Le notebook calcule les quintiles de <strong>deux façons</strong> :</p>
+<table>
+<thead>
+<tr>
+<th>Version</th>
+<th>Comment</th>
+<th>Écart Q5−Q1</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Intra-ticker</strong></td>
+<td>quintiles calculés <strong>séparément</strong> pour chaque titre</td>
+<td><strong>+34,8 pts</strong></td>
+</tr>
+<tr>
+<td>Poolé</td>
+<td>quintiles calculés sur les 2 740 jours mélangés</td>
+<td>+28,2 pts</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Pourquoi la version poolée est plus faible ?</strong> Ce tableau le montre :</p>
+<pre><code>Composition des quintiles POOLÉS (% de chaque ticker) :
+Ticker  AAPL  AMZN  META  NVDA  TSLA
+Q1      14.2   8.9  17.9   6.0  52.9     &lt;- plus de la MOITIÉ de Q1 est du TSLA
+Q2      24.7  15.9  15.0   8.2  36.2
+Q3      30.9  22.9  22.5  14.1   9.7
+Q4      25.0  33.6  19.9  20.8   0.5
+Q5       5.3  18.8  24.9  50.8   0.2     &lt;- plus de la MOITIÉ de Q5 est du NVDA
+</code></pre>
+<p>Si les quintiles étaient neutres, chaque case vaudrait 20 %. <strong>L'écart à 20 % mesure exactement le biais
+de niveau.</strong></p>
+<p>Rappelle-toi le chapitre 3 : NVDA a un sentiment moyen de 0,163 et TSLA de 0,045. Quand on trie tous les
+jours ensemble, le quintile « très positif » se remplit mécaniquement de jours NVDA, et le « très
+négatif » de jours TSLA.</p>
+<h2 id="102-ce-quon-mesure-vraiment-en-poole">10.2 — Ce qu'on mesure vraiment en poolé</h2>
+<p>La version poolée mélange <strong>deux effets</strong> :</p>
+<table>
+<thead>
+<tr>
+<th>Effet</th>
+<th>Nature</th>
+<th>Valeur scientifique</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Temporel</strong> : « quand le sentiment de NVDA est haut <em>pour NVDA</em>, NVDA gappe up »</td>
+<td>vrai signal</td>
+<td>✅</td>
+</tr>
+<tr>
+<td><strong>Transversal</strong> : « NVDA a un sentiment élevé, et NVDA a beaucoup monté »</td>
+<td>artefact</td>
+<td>❌</td>
+</tr>
+</tbody>
+</table>
+<p><strong>La version intra-ticker isole le premier effet.</strong> Chaque titre est comparé à sa propre histoire.</p>
+<h2 id="103-le-paradoxe-de-simpson">10.3 — Le paradoxe de Simpson</h2>
+<p>Ce phénomène a un nom et une longue histoire.</p>
+<blockquote>
+<p><strong>Le paradoxe de Simpson</strong> (1951) : une tendance observée dans plusieurs groupes peut <strong>s'inverser</strong>
+quand on agrège les groupes.</p>
+</blockquote>
+<p><strong>L'exemple historique — Berkeley, 1973.</strong> L'université est accusée de discriminer les femmes :</p>
+<pre><code>Admission globale :   hommes 44 %   femmes 35 %      &lt;- écart de 9 points
+</code></pre>
+<p>Mais en regardant <strong>département par département</strong>, les femmes étaient admises à taux égal ou supérieur
+dans presque tous.</p>
+<p><strong>L'explication.</strong> Les femmes candidataient massivement dans les départements les plus sélectifs (lettres,
+taux d'admission ~10 %), les hommes dans les moins sélectifs (ingénierie, ~50 %). L'agrégation créait une
+discrimination apparente qui n'existait dans aucun département.</p>
+<p><strong>Le mécanisme est exactement le même que le tien</strong> : une variable cachée (le département / le ticker)
+est liée à la fois à la variable explicative et à la cible.</p>
+<h2 id="104-la-lecon-generale">10.4 — La leçon générale</h2>
+<blockquote>
+<p><strong>Quand des groupes hétérogènes sont mélangés, toujours vérifier le résultat groupe par groupe.</strong></p>
+</blockquote>
+<p>Dans ton cas, l'agrégation ne renverse pas la conclusion — elle l'<strong>atténue</strong> (28,2 au lieu de 34,8). Mais
+elle aurait pu la renverser, et la seule façon de le savoir est de regarder.</p>
+<p><strong>C'est aussi pour cela que le notebook affiche le tableau de composition.</strong> Il transforme une intuition
+(« il pourrait y avoir un biais ») en un fait chiffré (« Q1 est à 52,9 % du TSLA »).</p>
+<hr />
+<h1 id="chapitre-11-le-test-z-de-difference-de-proportions">Chapitre 11 — Le test z de différence de proportions</h1>
+<h2 id="111-pourquoi-un-test">11.1 — Pourquoi un test</h2>
+<p>Les quintiles montrent un écart de 34,8 points. <strong>Mais est-ce que cet écart pourrait venir du hasard ?</strong></p>
+<p>Avec 549 observations par groupe, même deux groupes identiques donneraient un écart non nul. Le test
+répond à : <em>« quelle est la probabilité d'observer un écart aussi grand si, en réalité, il n'y avait
+aucune différence ? »</em></p>
+<h2 id="112-la-construction">11.2 — La construction</h2>
+<pre><code>                 p5  −  p1
+z  =  ────────────────────────────────
+       ┌──────────────────────────┐
+      \│ p̄ × (1 − p̄) × (1/n1 + 1/n5)
+</code></pre>
+<p>où <code>p̄</code> est la proportion combinée des deux groupes.</p>
+<p><strong>Comment lire cette formule :</strong></p>
+<ul>
+<li>Le <strong>numérateur</strong> est ce qu'on observe : l'écart entre les deux proportions.</li>
+<li>Le <strong>dénominateur</strong> est ce à quoi on pourrait s'attendre <strong>par hasard</strong> — l'erreur type de l'écart.</li>
+<li>Le rapport <code>z</code> est donc : <strong>« combien d'erreurs types représente l'écart observé ? »</strong></li>
+</ul>
+<p>Un <code>z</code> de 2 signifie « l'écart vaut 2 fois ce que le hasard produirait typiquement » — c'est le seuil
+usuel de significativité à 5 %.</p>
+<h2 id="113-les-resultats">11.3 — Les résultats</h2>
+<pre><code>cible  pct_Q1  pct_Q5  n_par_groupe  ecart_pts      z   p_value
+y_gap    39.3    74.1           549      34.79  11.63  0.00e+00
+ y_oc    52.8    50.6           549      -2.19  -0.72  4.69e-01
+ y_cc    44.1    61.9           549      17.85   5.93  3.11e-09
+</code></pre>
+<table>
+<thead>
+<tr>
+<th>Cible</th>
+<th>Lecture</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>y_gap</code></td>
+<td>z = <strong>11,63</strong> — l'écart vaut 11,6 fois ce que le hasard produirait. Incontestable.</td>
+</tr>
+<tr>
+<td><code>y_oc</code></td>
+<td>z = <strong>−0,72</strong> — dans la marge du hasard. <strong>Aucun signal.</strong></td>
+</tr>
+<tr>
+<td><code>y_cc</code></td>
+<td>z = <strong>5,93</strong> — significatif mais plus faible</td>
+</tr>
+</tbody>
+</table>
+<h2 id="114-la-verification-de-coherence-interne">11.4 — La vérification de cohérence interne</h2>
+<p>Le résultat sur <code>y_cc</code> est une <strong>preuve de cohérence</strong> qu'il faut savoir expliquer.</p>
+<p>Puisque <code>ret_cc = gap composé avec ret_oc</code>, et que le signal est dans le gap mais pas dans la séance,
+l'effet sur <code>ret_cc</code> doit être <strong>positif mais plus faible</strong> que sur le gap.</p>
+<pre><code>gap    : +34,8 points
+ret_cc : +17,8 points      &lt;- environ la moitié
+ret_oc :  −2,2 points
+</code></pre>
+<p><strong>C'est exactement ce qu'on observe.</strong> Si <code>ret_cc</code> avait montré un effet plus fort que <code>gap</code>, il y aurait
+eu une incohérence à expliquer.</p>
+<h2 id="115-ce-quest-vraiment-une-p-value">11.5 — Ce qu'est vraiment une p-value</h2>
+<p><strong>La p-value est le concept le plus mal compris de toute la statistique.</strong> Voici la définition exacte :</p>
+<blockquote>
+<p>La p-value est la probabilité d'observer un résultat <strong>au moins aussi extrême</strong> que celui obtenu,
+<strong>si l'hypothèse nulle était vraie</strong>.</p>
+</blockquote>
+<p>L'hypothèse nulle ici : <em>« il n'y a aucune différence entre Q1 et Q5 »</em>.</p>
+<h3 id="ce-que-la-p-value-nest-pas">Ce que la p-value n'est PAS</h3>
+<table>
+<thead>
+<tr>
+<th>Affirmation</th>
+<th>Vrai ?</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>« p = 0,05 → il y a 5 % de chances que l'hypothèse nulle soit vraie »</td>
+<td>❌ <strong>FAUX</strong></td>
+</tr>
+<tr>
+<td>« p = 0,05 → il y a 95 % de chances que mon résultat soit vrai »</td>
+<td>❌ <strong>FAUX</strong></td>
+</tr>
+<tr>
+<td>« p &lt; 0,05 → l'effet est important »</td>
+<td>❌ <strong>FAUX</strong> (ça ne dit rien de la taille)</td>
+</tr>
+<tr>
+<td>« p = 0,05 → si l'hypothèse nulle était vraie, un tel résultat arriverait 5 fois sur 100 »</td>
+<td>✅ <strong>VRAI</strong></td>
+</tr>
+</tbody>
+</table>
+<p>La p-value raisonne <strong>en supposant l'hypothèse nulle vraie</strong>. Elle ne peut donc pas dire quelle est la
+probabilité que cette hypothèse soit vraie — ce serait circulaire.</p>
+<h3 id="le-piege-significatif-important">Le piège : significatif ≠ important</h3>
+<p>Avec un très grand échantillon, <strong>n'importe quel effet minuscule devient significatif</strong>. Une corrélation
+de 0,001 sur un million d'observations aurait une p-value écrasante — et aucune valeur pratique.</p>
+<p><strong>C'est pourquoi le notebook rapporte toujours trois choses ensemble :</strong></p>
+<ol>
+<li>la <strong>taille de l'effet</strong> (34,8 points)</li>
+<li>la <strong>significativité</strong> (z = 11,63)</li>
+<li>l'<strong>incertitude</strong> (intervalle de confiance — chapitre suivant)</li>
+</ol>
+<blockquote>
+<p><strong>En 2016, l'American Statistical Association a publié une déclaration officielle</strong> mettant en garde
+contre l'usage mécanique du seuil p &lt; 0,05. C'est dire à quel point le sujet est sensible. Dans un
+mémoire, rapporter un intervalle de confiance vaut toujours mieux qu'une p-value seule.</p>
+</blockquote>
+<hr />
+<h1 id="chapitre-12-le-bootstrap-par-blocs">Chapitre 12 — Le bootstrap par blocs ⭐</h1>
+<h2 id="121-le-probleme-que-personne-ne-voit">12.1 — Le problème que personne ne voit</h2>
+<p>Tous les tests classiques — Pearson, z-test, Student — supposent que les observations sont
+<strong>indépendantes</strong>.</p>
+<p><strong>Tes observations ne le sont pas du tout.</strong> Deux raisons :</p>
+<h3 id="dependance-temporelle-autocorrelation">Dépendance temporelle (autocorrélation)</h3>
+<p>Le sentiment d'aujourd'hui ressemble à celui d'hier. Si TSLA fait l'objet d'une polémique lundi, elle
+durera probablement jusqu'à mercredi. Les jours consécutifs ne sont pas des tirages indépendants.</p>
+<h3 id="dependance-transversale">Dépendance transversale</h3>
+<p>Les 5 titres sont tous du Nasdaq, tous technologiques. Quand le marché baisse, ils baissent ensemble. Le
+2 mars 2022, tu n'as pas 5 observations indépendantes — tu en as <strong>une</strong> répétée 5 fois avec des
+variations.</p>
+<h2 id="122-pourquoi-cest-grave">12.2 — Pourquoi c'est grave</h2>
+<p>Le nombre <strong>effectif</strong> d'observations est bien inférieur à 2 740. Or l'erreur type décroît en <code>1/√n</code>.</p>
+<p>Si le n effectif réel est 600 au lieu de 2 740, l'erreur type est sous-estimée d'un facteur
+√(2740/600) ≈ <strong>2,1</strong>. Les intervalles de confiance sont deux fois trop étroits, et les p-values
+beaucoup trop petites.</p>
+<blockquote>
+<p><strong>C'est l'erreur la plus courante dans les mémoires sur le sentiment</strong>, et c'est une question classique
+de jury : <em>« vos observations sont-elles indépendantes ? »</em></p>
+</blockquote>
+<h2 id="123-le-bootstrap-lidee-generale">12.3 — Le bootstrap, l'idée générale</h2>
+<p>Le <strong>bootstrap</strong> (Efron, 1979) répond à : <em>« si je refaisais l'expérience, quelle variabilité
+obtiendrais-je ? »</em></p>
+<p><strong>L'astuce.</strong> On ne peut pas refaire l'expérience. Mais on peut <strong>rééchantillonner</strong> les données dont on
+dispose : tirer au hasard, avec remise, un échantillon de même taille, et recalculer la statistique. En
+répétant 1 000 fois, on obtient une <strong>distribution</strong> de la statistique — et donc son intervalle de
+confiance.</p>
+<blockquote>
+<p><strong>Le nom vient de l'expression anglaise</strong> <em>« to pull oneself up by one's bootstraps »</em> — se soulever en
+tirant sur ses propres lacets. L'idée est là : on estime l'incertitude en n'utilisant que les données
+elles-mêmes, sans hypothèse théorique.</p>
+</blockquote>
+<h2 id="124-pourquoi-par-blocs">12.4 — Pourquoi « par blocs »</h2>
+<p>Le bootstrap classique tire des <strong>observations isolées</strong> au hasard. Cela <strong>détruit</strong> la structure
+temporelle : on pourrait tirer le lundi, puis le vendredi de trois mois plus tard, puis le mardi
+d'avant…</p>
+<p>Le <strong>bootstrap par blocs</strong> (Künsch, 1989) tire des <strong>segments contigus</strong> — ici, des blocs de 20 jours
+consécutifs.</p>
+<pre><code>Bootstrap classique :   [lun] [ven+3mois] [mar-2ans] [jeu] ...    ← structure détruite
+Bootstrap par blocs :   [20 jours consécutifs] [20 jours] [20 jours] ...  ← structure préservée
+</code></pre>
+<p><strong>En préservant les blocs, on préserve l'autocorrélation à l'intérieur des blocs.</strong> L'intervalle de
+confiance obtenu est donc <strong>honnête</strong> : plus large, et plus juste.</p>
+<p><strong>Comment choisir la taille du bloc ?</strong> Assez grand pour capturer la dépendance (ici, ~1 mois de bourse),
+assez petit pour avoir beaucoup de blocs différents. 20 jours est un compromis standard.</p>
+<h2 id="125-les-resultats">12.5 — Les résultats</h2>
+<pre><code>Cible Ticker   n     rho              IC95       conclusion
+   gap   AAPL 548  0.3491 [+0.255 ; +0.414]     SIGNIFICATIF
+   gap   AMZN 548  0.2432 [+0.160 ; +0.332]     SIGNIFICATIF
+   gap   META 548  0.2086 [+0.146 ; +0.255]     SIGNIFICATIF
+   gap   NVDA 547  0.1773 [+0.098 ; +0.238]     SIGNIFICATIF
+   gap   TSLA 545  0.2917 [+0.187 ; +0.369]     SIGNIFICATIF
+
+ret_oc   AAPL 548 -0.0820 [-0.149 ; -0.006]     SIGNIFICATIF
+ret_oc   AMZN 548 -0.0116 [-0.099 ; +0.072] non significatif
+ret_oc   META 548  0.0420 [-0.030 ; +0.123] non significatif
+ret_oc   NVDA 547 -0.0168 [-0.078 ; +0.046] non significatif
+ret_oc   TSLA 545  0.0161 [-0.044 ; +0.084] non significatif
+
+Nombre de titres significatifs sur 5 :
+  gap       5
+  ret_cc    5
+  ret_oc    1
+</code></pre>
+<h3 id="comment-lire-un-intervalle-de-confiance">Comment lire un intervalle de confiance</h3>
+<p><code>[+0,255 ; +0,414]</code> pour AAPL se lit : <em>« les données sont compatibles avec une vraie corrélation comprise
+entre 0,255 et 0,414 »</em>.</p>
+<p><strong>La règle de décision est visuelle :</strong> si l'intervalle <strong>ne contient pas zéro</strong>, l'effet est
+significatif.</p>
+<p><strong>Pourquoi c'est mieux qu'une p-value :</strong> l'intervalle donne aussi l'<strong>amplitude plausible</strong> de l'effet.
+Une p-value dit seulement « ce n'est probablement pas zéro ». Un intervalle dit « c'est probablement entre
+0,26 et 0,41 » — ce qui est bien plus utile.</p>
+<h3 id="le-resultat-sur-aapl-ret_oc-a-savoir-expliquer">Le résultat sur AAPL / ret_oc : à savoir expliquer</h3>
+<p>AAPL est le seul titre où la séance est « significative » — et le coefficient est <strong>négatif</strong> (−0,082),
+avec un intervalle qui frôle zéro : <code>[−0,149 ; −0,006]</code>.</p>
+<p><strong>Deux interprétations à présenter honnêtement :</strong></p>
+<ol>
+<li>
+<p><strong>Une légère réversion.</strong> Après une ouverture poussée par un sentiment très positif, le prix rend une
+   petite partie du mouvement pendant la séance. C'est cohérent avec une <strong>surréaction à l'ouverture</strong>,
+   phénomène documenté.</p>
+</li>
+<li>
+<p><strong>Un faux positif.</strong> Avec 5 titres × 3 cibles = 15 tests, la probabilité d'obtenir au moins un
+   « significatif » par hasard au seuil de 5 % est de 1 − 0,95¹⁵ ≈ <strong>54 %</strong>. Il est donc probable qu'au
+   moins un test ressorte par pur hasard.</p>
+</li>
+</ol>
+<p><strong>La bonne formulation en soutenance :</strong> <em>« un seul titre sur cinq montre un effet sur la séance, de signe
+négatif et à la limite de la significativité ; compte tenu du nombre de tests effectués, nous le traitons
+comme une hypothèse à retester plutôt que comme un résultat. »</em></p>
+<p>C'est le problème des <strong>comparaisons multiples</strong>, et le reconnaître est une marque de rigueur.</p>
+<hr />
+<h1 id="chapitre-13-le-spearman-tester-la-monotonie">Chapitre 13 — Le Spearman : tester la monotonie</h1>
+<h2 id="131-pearson-vs-spearman">13.1 — Pearson vs Spearman</h2>
+<table>
+<thead>
+<tr>
+<th></th>
+<th>Pearson</th>
+<th>Spearman</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Travaille sur</td>
+<td>les <strong>valeurs</strong></td>
+<td>les <strong>rangs</strong></td>
+</tr>
+<tr>
+<td>Détecte</td>
+<td>les relations <strong>linéaires</strong></td>
+<td>les relations <strong>monotones</strong></td>
+</tr>
+<tr>
+<td>Sensible aux extrêmes</td>
+<td><strong>oui</strong></td>
+<td>non</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Le Spearman, c'est simplement le Pearson calculé sur les rangs.</strong></p>
+<pre><code>Valeurs :  2,  5,  9,  100        -&gt;  rangs : 1, 2, 3, 4
+</code></pre>
+<p>La valeur 100, aberrante, devient simplement « le 4ᵉ ». C'est ce qui rend le Spearman <strong>robuste</strong>.</p>
+<p><strong>Ce qu'est une relation monotone :</strong> qui va toujours dans le même sens, sans forcément être une droite.</p>
+<pre><code>X :  1    2    3    4    5
+Y :  1    4    9   16   25        (Y = X²)
+
+Pearson  = 0,98   (presque linéaire sur cet intervalle)
+Spearman = 1,00   (PARFAITEMENT monotone)
+</code></pre>
+<h2 id="132-lusage-ici">13.2 — L'usage ici</h2>
+<pre><code>AAPL  : rho = +0.900   |  Q1 = 31.8 %  -&gt;  Q5 = 72.7 %
+AMZN  : rho = +0.900
+META  : rho = +0.821
+NVDA  : rho = +1.000
+TSLA  : rho = +1.000
+
+Moyenne des rho : +0.924
+Titres à rho &gt; 0 : 5 / 5
+</code></pre>
+<p>On teste : <em>« le % de gaps positifs croît-il régulièrement de Q1 à Q5 ? »</em></p>
+<p>Un ρ de +1,000 (NVDA, TSLA) signifie une <strong>monotonie parfaite</strong> : chaque quintile est strictement
+au-dessus du précédent. Pour META (+0,821), le décrochage de Q3 casse légèrement l'ordre.</p>
+<h2 id="133-le-piege-absolu-ne-pas-reporter-la-p-value">13.3 — Le piège absolu : ne PAS reporter la p-value</h2>
+<pre><code>NE PAS reporter la p-value de ce test dans le mémoire (n = 5 points).
+</code></pre>
+<p><strong>Pourquoi.</strong> Ce test porte sur <strong>5 points</strong> — les 5 moyennes de quintiles. Avec n = 5 :</p>
+<ul>
+<li>il n'existe que 5! = <strong>120</strong> permutations possibles ;</li>
+<li>la plus petite p-value <strong>atteignable</strong> par un test exact est donc <strong>1/120 ≈ 0,0083</strong>.</li>
+</ul>
+<p>Toute p-value inférieure est <strong>mathématiquement impossible</strong>. Elle proviendrait d'une approximation
+(scipy utilise une loi de Student) dont la statistique <strong>diverge</strong> quand ρ = 1 :</p>
+<pre><code>             ┌─────────┐
+             │  n − 2  │
+t  =  rho ×  │ ─────── │       -&gt;  quand rho = 1, le dénominateur est 0
+            \│  1−rho² │           et t part à l'infini
+</code></pre>
+<p><strong>Plus fondamentalement</strong>, ce test jette 2 740 observations pour n'en garder que 5 déjà moyennées. Il perd
+99,8 % de l'information.</p>
+<blockquote>
+<p><strong>Le rôle du Spearman ici est purement descriptif</strong> : montrer que la relation est <strong>monotone</strong>. La
+significativité vient du z-test (ch. 11) et du bootstrap (ch. 12), qui utilisent toutes les
+observations.</p>
+<p><strong>Savoir quand un test est approprié — et le dire — est aussi important que savoir le calculer.</strong></p>
+</blockquote>
+<hr />
+<h1 id="chapitre-14-les-lags-la-preuve-dabsence-de-fuite">Chapitre 14 — Les lags : la preuve d'absence de fuite ⭐</h1>
+<p><strong>C'est le test le plus important du notebook pour la crédibilité du travail.</strong></p>
+<h2 id="141-lidee">14.1 — L'idée</h2>
+<p>On décale le sentiment de −3 à +5 jours et on recalcule la corrélation avec le gap du jour J.</p>
+<pre><code>lag = +1  -&gt;  on utilise le sentiment d'HIER pour expliquer le gap d'aujourd'hui
+lag =  0  -&gt;  le sentiment de la nuit qui précède l'ouverture       &lt;- la relation étudiée
+lag = −1  -&gt;  on utilise le sentiment de DEMAIN pour expliquer le gap d'aujourd'hui  (!)
+</code></pre>
+<h2 id="142-les-trois-conditions-dun-signal-propre">14.2 — Les trois conditions d'un signal propre</h2>
+<table>
+<thead>
+<tr>
+<th>Condition</th>
+<th>Ce qu'on doit observer</th>
+<th>Ce que ça prouve</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>1</strong></td>
+<td>lag 0 : corrélation forte</td>
+<td>il y a bien un signal</td>
+</tr>
+<tr>
+<td><strong>2</strong></td>
+<td>lags <strong>négatifs</strong> ≈ 0</td>
+<td><strong>pas de fuite</strong> — les fenêtres sont bien alignées</td>
+</tr>
+<tr>
+<td><strong>3</strong></td>
+<td>lags <strong>positifs</strong> ≈ 0</td>
+<td>l'information est incorporée immédiatement</td>
+</tr>
+</tbody>
+</table>
+<h3 id="pourquoi-la-condition-2-est-la-plus-importante">Pourquoi la condition 2 est la plus importante</h3>
+<p><strong>Le sentiment de demain ne peut pas causer le gap d'aujourd'hui.</strong> C'est logiquement impossible.</p>
+<p>Donc si on trouvait une forte corrélation à lag −1, cela signifierait une <strong>erreur d'alignement</strong> :
+décalage de fuseau, messages rattachés au mauvais jour de bourse, décalage d'un jour dans le code. Une
+fuite d'information qui invaliderait tout le mémoire.</p>
+<p><strong>C'est un test de falsification</strong> au sens de Popper : on cherche activement à <strong>réfuter</strong> son propre
+résultat. Si le test passe, la confiance augmente énormément.</p>
+<h3 id="pourquoi-la-condition-3-compte-aussi">Pourquoi la condition 3 compte aussi</h3>
+<p>Si le signal persistait 24h, il existerait un arbitrage évident que personne n'aurait exploité — beaucoup
+plus suspect qu'informatif. Sa disparition rapide est la <strong>signature de l'efficience</strong>.</p>
+<h2 id="143-les-resultats">14.3 — Les résultats</h2>
+<pre><code>Cible     gap  ret_cc  ret_oc
+lag
+-3     0.0279  0.0320  0.0188
+-2     0.0296  0.0384  0.0256
+-1     0.0479  0.1375  0.1396
+ 0     0.1572  0.0933 -0.0103
+ 1    -0.0098 -0.0241 -0.0230
+ 2    -0.0073 -0.0079 -0.0049
+ 3    -0.0227 -0.0137  0.0013
+ 5    -0.0124 -0.0009  0.0085
+
+VERDICT
+  rho(lag 0) sur le gap                = +0.1572
+  |rho| maximal sur les lags NÉGATIFS  = 0.0479
+  rapport                              = 0.30
+  [OK] Aucune fuite détectée.
+</code></pre>
+<h3 id="sur-la-colonne-gap-les-trois-conditions-sont-reunies">Sur la colonne <code>gap</code> : les trois conditions sont réunies</h3>
+<ul>
+<li>lag 0 : <strong>+0,157</strong> — fort</li>
+<li>lags négatifs : maximum <strong>0,048</strong> — trois fois plus petit</li>
+<li>lags positifs : entre −0,023 et −0,007 — nul</li>
+</ul>
+<h2 id="144-la-ligne-a-savoir-expliquer-lag-1-sur-ret_oc-01396">14.4 — La ligne à savoir expliquer : lag −1 sur <code>ret_oc</code> = 0,1396</h2>
+<p>Regarde la colonne <code>ret_oc</code> : à lag −1, la corrélation vaut <strong>+0,1396</strong> — plus forte que tout ce qu'on
+observe à lag 0 !</p>
+<p><strong>Est-ce une fuite ?</strong> Non. C'est <strong>la preuve la plus élégante du chapitre 7.</strong></p>
+<p><strong>Ce que dit ce chiffre :</strong> le sentiment de la nuit <strong>qui suit</strong> le jour J est corrélé au rendement de
+séance du jour J. Autrement dit :</p>
+<blockquote>
+<p><em>« Ce que les gens écrivent le soir dépend de ce que le prix a fait pendant la journée. »</em></p>
+</blockquote>
+<p>C'est <strong>le sentiment qui réagit au prix</strong>, pas l'inverse. Exactement le mécanisme qui rendait
+<code>mu_mkt → ret_oc = 0,203</code> inexploitable.</p>
+<p><strong>Cette ligne confirme donc, de façon indépendante, la décision d'exclure les fenêtres contemporaines.</strong>
+Elle mérite d'être commentée dans le mémoire — c'est le genre de détail qui montre qu'on a vraiment
+compris ses données.</p>
+<h2 id="145-la-precision-de-vocabulaire-a-maitriser">14.5 — La précision de vocabulaire à maîtriser</h2>
+<blockquote>
+<p><strong>« Lag 0 » n'est pas « contemporain » au sens d'une fuite.</strong></p>
+<p><code>mu_night_full</code> du jour J se ferme à 9h30, et <code>gap</code> du jour J se forme à 9h30. La relation va donc de
+« juste avant » vers « juste après ».</p>
+<p><strong>Il faut le dire explicitement dans le mémoire</strong>, sinon un lecteur pressé croira à un problème.</p>
+</blockquote>
+<p><em>(Nuance signalée dans le verdict général : la fenêtre <code>pre</code> recouvre la séance de pré-marché, ce qui rend
+la relation plus « simultanée » qu'il n'y paraît. Statistiquement le test est valide ; économiquement,
+c'est ce qui empêche de trader le signal.)</em></p>
+<hr />
+<h1 id="chapitre-15-modeles-emboites-et-increment-de-r2">Chapitre 15 — Modèles emboîtés et incrément de R²</h1>
+<h2 id="151-le-changement-de-question">15.1 — Le changement de question</h2>
+<p>Jusqu'ici on cherchait à prédire une <strong>direction</strong>. Ici on change : peut-on prédire l'<strong>amplitude</strong> ?</p>
+<table>
+<thead>
+<tr>
+<th></th>
+<th>Direction</th>
+<th>Amplitude</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>On prédit</td>
+<td>le <strong>signe</strong> du rendement</td>
+<td>la <strong>taille</strong> du mouvement</td>
+</tr>
+<tr>
+<td>Arbitrable ?</td>
+<td>oui, donc arbitré</td>
+<td>difficilement (il faut des options)</td>
+</tr>
+<tr>
+<td>Persistance</td>
+<td>quasi nulle</td>
+<td><strong>forte</strong></td>
+</tr>
+<tr>
+<td>R² typique</td>
+<td>0,001 – 0,01</td>
+<td><strong>0,3 – 0,6</strong></td>
+</tr>
+</tbody>
+</table>
+<p><strong>Pourquoi la volatilité se prédit et pas la direction.</strong> Si la direction était prévisible, tout le monde
+achèterait et le prix s'ajusterait instantanément. La volatilité, elle, ne peut pas être « arbitrée
+away » : elle est une propriété du processus, pas une opportunité de profit direct.</p>
+<h2 id="152-la-bonne-question-et-la-mauvaise">15.2 — La bonne question, et la mauvaise</h2>
+<p>❌ <em>« L'attention corrèle-t-elle avec la volatilité ? »</em> → oui, trivialement. Les jours agités font parler.
+Cette corrélation ne prouve rien.</p>
+<p>✅ <em>« L'attention apporte-t-elle de l'information </em><em>au-delà de la volatilité de la veille</em><em> ? »</em></p>
+<h2 id="153-la-technique-les-modeles-emboites">15.3 — La technique : les modèles emboîtés</h2>
+<p>Deux modèles sont <strong>emboîtés</strong> si l'un est un cas particulier de l'autre — si le petit s'obtient en
+mettant certains coefficients du grand à zéro.</p>
+<pre><code>[M0] amplitude ~ effets fixes ticker
+[M1] amplitude ~ effets fixes + volatilité passée
+[M2] amplitude ~ effets fixes + volatilité passée + attention        &lt;- M1 emboîté dans M2
+[M3] amplitude ~ ... + désaccord
+</code></pre>
+<p>On regarde <strong>combien de R² chaque ajout apporte</strong>.</p>
+<h3 id="ce-quest-le-r2">Ce qu'est le R²</h3>
+<pre><code>                     variance expliquée par le modèle
+R²  =  ────────────────────────────────────────────────
+                     variance totale de la cible
+</code></pre>
+<p>C'est la <strong>part de la variabilité expliquée</strong>. R² = 0,49 signifie « le modèle explique 49 % de la
+variabilité de l'amplitude ».</p>
+<h3 id="le-piege-du-r2-et-la-correction">Le piège du R² et la correction</h3>
+<p><strong>Ajouter n'importe quelle variable augmente toujours le R²</strong>, même une variable purement aléatoire. Avec
+autant de variables que d'observations, on atteint R² = 1 sans rien avoir appris.</p>
+<p>D'où le <strong>R² ajusté</strong>, qui pénalise le nombre de variables :</p>
+<pre><code>R²ajusté = 1 − (1 − R²) × (n − 1) / (n − k − 1)      k = nombre de variables
+</code></pre>
+<p>Si une variable n'apporte rien, le R² ajusté <strong>baisse</strong>.</p>
+<h2 id="154-les-resultats">15.4 — Les résultats</h2>
+<pre><code>[M0] effets fixes ticker seuls              R2 = 0.2271   R2ajusté = 0.2260
+[M1] + volatilité passée   &lt;-- RÉFÉRENCE    R2 = 0.4876   R2ajusté = 0.4865
+[M2] + attention anormale nocturne          R2 = 0.5109   R2ajusté = 0.5096
+[M3] + désaccord (sd du sentiment)          R2 = 0.5112   R2ajusté = 0.5097
+
+  Apport de la volatilité passée   (M1 − M0) : +0.2605
+  Apport de l'attention anormale   (M2 − M1) : +0.0233
+  Apport du désaccord              (M3 − M2) : +0.0003
+
+Test de Fisher emboîté M1 vs M2 : F = 127.67, p = 5.93e-29
+</code></pre>
+<h3 id="comment-lire-ces-chiffres">Comment lire ces chiffres</h3>
+<p><strong>M0 → M1 : +0,26.</strong> La volatilité passée explique 26 points de R² supplémentaires. C'est le
+<strong>regroupement de volatilité</strong> de Mandelbrot : un jour agité suit un jour agité. Effet massif et attendu.</p>
+<p><strong>M1 → M2 : +0,023.</strong> L'attention nocturne ajoute 2,3 points. <strong>Petit en valeur absolue, mais :</strong></p>
+<ol>
+<li>la référence est déjà excellente (48,8 %) — ajouter à un bon modèle est difficile ;</li>
+<li>le test de Fisher donne <strong>F = 127,67, p = 6 × 10⁻²⁹</strong> — l'apport est systématique, pas fortuit ;</li>
+<li>le R² ajusté <strong>monte aussi</strong> (0,4865 → 0,5096) — ce n'est pas de la sur-paramétrisation.</li>
+</ol>
+<p><strong>M2 → M3 : +0,0003.</strong> Le désaccord n'apporte <strong>rien</strong>. Et c'est un résultat en soi.</p>
+<h2 id="155-le-test-de-fisher-emboite">15.5 — Le test de Fisher emboîté</h2>
+<p><strong>La question :</strong> l'amélioration du R² est-elle plus grande que ce que le hasard produirait en ajoutant
+une variable quelconque ?</p>
+<pre><code>        ( R²grand − R²petit ) / (nombre de variables ajoutées)
+F  =  ───────────────────────────────────────────────────────────
+              ( 1 − R²grand ) / ( n − k − 1 )
+</code></pre>
+<p><strong>Numérateur</strong> : ce qu'on gagne, par variable ajoutée.
+<strong>Dénominateur</strong> : ce qui reste inexpliqué, par degré de liberté.</p>
+<p>Si F est grand, le gain dépasse largement le bruit. Ici <strong>F = 127,67</strong> : le gain est 128 fois supérieur au
+bruit typique.</p>
+<h2 id="156-les-coefficients-et-le-resultat-qui-surprend">15.6 — Les coefficients, et le résultat qui surprend</h2>
+<pre><code>                  Coef.  Std.Err.       t   P&gt;|t|
+log_ampl_lag1    0.2306    0.0227  10.1617  0.0000
+log_ampl_ma5     0.4858    0.0297  16.3691  0.0000
+nabn_night_full  0.1351    0.0120  11.2529  0.0000
+sd_night_full    0.2217    0.1749   1.2675  0.2051     &lt;- NON significatif
+</code></pre>
+<p><strong><code>nabn_night_full</code> : coefficient +0,135, t = 11,25.</strong> Une unité d'attention anormale supplémentaire
+augmente le log de l'amplitude de 0,135 — soit environ <strong>+14 % d'amplitude</strong>. Massivement significatif.</p>
+<p><strong><code>sd_night_full</code> : p = 0,205 — non significatif.</strong></p>
+<p><strong>C'est un résultat qu'il faut reporter, pas cacher :</strong></p>
+<blockquote>
+<p>Ce qui compte n'est pas que les gens soient <strong>en désaccord</strong>, c'est qu'ils soient <strong>nombreux à parler</strong>.</p>
+</blockquote>
+<p>Le volume d'attention prédit la volatilité ; la dispersion des opinions n'apporte rien de plus une fois le
+volume pris en compte. C'est une contribution empirique intéressante — la littérature sur le désaccord
+(Miller 1977) suggérait l'inverse.</p>
+<p><strong>Une variable testée et rejetée est une information.</strong> Un mémoire qui ne rapporte que les variables qui
+marchent est un mémoire suspect.</p>
+<hr />
+<h1 id="chapitre-16-les-regimes-de-marche">Chapitre 16 — Les régimes de marché</h1>
+<h2 id="161-pourquoi-decouper-la-periode">16.1 — Pourquoi découper la période</h2>
+<p>2020-2022 n'est pas une période homogène. Elle contient un krach, un rebond historique, une bulle
+spéculative et un retournement monétaire.</p>
+<p><strong>Un signal qui n'existerait que pendant un seul épisode ne serait pas un signal, mais un accident.</strong></p>
+<h2 id="162-le-decoupage">16.2 — Le découpage</h2>
+<table>
+<thead>
+<tr>
+<th>Régime</th>
+<th>Période</th>
+<th>Ce qui s'y passe</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Krach COVID</td>
+<td>02/01 → 23/03/2020</td>
+<td>chute de 34 % du S&amp;P en 33 jours</td>
+</tr>
+<tr>
+<td>Reprise / liquidité</td>
+<td>24/03 → 31/12/2020</td>
+<td>QE massif, rebond en V</td>
+</tr>
+<tr>
+<td>Euphorie retail</td>
+<td>01/01 → 30/06/2021</td>
+<td>GameStop, meme stocks, pic Robinhood</td>
+</tr>
+<tr>
+<td>Plateau / rotation</td>
+<td>01/07 → 31/12/2021</td>
+<td>fin du rallye, rotation sectorielle</td>
+</tr>
+<tr>
+<td>Resserrement Fed</td>
+<td>01/01 → 04/03/2022</td>
+<td>pivot monétaire, correction du Nasdaq</td>
+</tr>
+</tbody>
+</table>
+<blockquote>
+<p><strong>Une précaution à écrire dans le mémoire :</strong> ces régimes sont définis <strong>ex post</strong>, avec des dates
+connues aujourd'hui. C'est acceptable pour une analyse <strong>descriptive</strong>, mais il faut préciser qu'ils ne
+sont <strong>pas</strong> utilisés comme variable explicative dans les modèles — sinon ce serait une fuite.</p>
+</blockquote>
+<h2 id="163-les-resultats">16.3 — Les résultats</h2>
+<pre><code>             Regime   n  rho_gap          IC95_gap  rho_seance  fiable
+        Krach COVID 280    0.192 [+0.077 ; +0.302]      -0.026     OUI
+Reprise / liquidité 985    0.058 [-0.005 ; +0.120]      -0.037 fragile
+    Euphorie retail 620    0.157 [+0.080 ; +0.233]       0.024     OUI
+ Plateau / rotation 640    0.215 [+0.140 ; +0.288]       0.023     OUI
+   Resserrement Fed 211    0.281 [+0.152 ; +0.401]      -0.071     OUI
+</code></pre>
+<p><strong>Quatre régimes sur cinq sont significatifs.</strong> Et la colonne <code>rho_seance</code> reste collée à zéro partout —
+la même conclusion, répétée cinq fois.</p>
+<h3 id="le-regime-fragile-a-reporter-honnetement">Le régime « fragile » : à reporter honnêtement</h3>
+<p>Avril → décembre 2020 : ρ = 0,058, intervalle <code>[−0,005 ; +0,120]</code> qui <strong>touche zéro</strong>.</p>
+<p><strong>Interprétation plausible.</strong> Pendant le rebond en V post-COVID, tout montait quoi qu'il arrive. Le marché
+était dominé par un facteur commun massif (l'injection de liquidité), et le sentiment individuel se noyait
+dedans.</p>
+<p><strong>Ne pas masquer ce résultat.</strong> Le reporter et l'interpréter est un point de discussion intéressant, pas
+une faiblesse. Un mémoire où tout est significatif partout est un mémoire dont on se méfie.</p>
+<h3 id="la-tendance-interessante">La tendance intéressante</h3>
+<pre><code>Krach COVID          0.192
+Reprise              0.058
+Euphorie retail      0.157
+Plateau              0.215
+Resserrement Fed     0.281      &lt;- le plus fort
+</code></pre>
+<p>Le signal est <strong>le plus fort dans le régime le plus récent et le plus tendu</strong>. C'est rassurant pour la
+validité externe : le signal ne s'affaiblit pas avec le temps, et il ne dépend pas de l'épisode meme
+stocks.</p>
+<h2 id="164-lintervalle-de-confiance-de-fisher">16.4 — L'intervalle de confiance de Fisher</h2>
+<p>Une corrélation est bornée entre −1 et +1 : sa distribution n'est <strong>pas symétrique</strong>, surtout près des
+bornes. On ne peut donc pas construire l'intervalle directement.</p>
+<p><strong>La transformation z de Fisher</strong> règle le problème :</p>
+<pre><code>z  =  arctanh(rho)  =  ½ × ln( (1+rho) / (1−rho) )
+</code></pre>
+<p>Cette transformation « étire » l'intervalle [−1, +1] vers tout l'axe réel, et rend <code>z</code> approximativement
+<strong>normal</strong>, avec un écart-type simple :</p>
+<pre><code>écart-type de z  =  1 / racine(n − 3)
+</code></pre>
+<p>On construit alors l'intervalle sur <code>z</code>, puis on revient en arrière avec <code>tanh</code>.</p>
+<pre><code>IC sur z      :  z ± 1,96 / racine(n−3)
+IC sur rho    :  tanh( borne inférieure )  ,  tanh( borne supérieure )
+</code></pre>
+<p><strong>C'est pourquoi les intervalles ne sont pas symétriques autour de ρ.</strong> Regarde le krach COVID :
+ρ = 0,192, intervalle <code>[0,077 ; 0,302]</code> — 0,115 en dessous, 0,110 au-dessus. Léger, mais réel.</p>
+<h3 id="la-colonne-fiable-pourquoi-elle-existe">La colonne « fiable » : pourquoi elle existe</h3>
+<pre><code class="language-python">&quot;OUI&quot; if (len(s) &gt;= 60 and lo * hi &gt; 0) else &quot;fragile&quot;
+</code></pre>
+<p>Deux conditions :</p>
+<ol>
+<li><strong>au moins 60 observations</strong> — en dessous, l'intervalle est si large qu'il ne veut rien dire ;</li>
+<li><strong>l'intervalle ne contient pas zéro</strong> — <code>lo × hi &gt; 0</code> teste que les deux bornes ont le même signe.</li>
+</ol>
+<p><strong>Le rôle de cette colonne est d'empêcher la sur-interprétation.</strong> Sans elle, on pourrait être tenté de
+commenter le 0,058 du régime « Reprise » comme s'il s'agissait d'un résultat.</p>
+<hr />
+<h1 id="chapitre-17-recapitulatif">Chapitre 17 — Récapitulatif</h1>
+<h2 id="171-les-12-idees-a-retenir">17.1 — Les 12 idées à retenir</h2>
+<table>
+<thead>
+<tr>
+<th>#</th>
+<th>Idée</th>
+<th>Chapitre</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>1</strong></td>
+<td><strong>L'EDA vient avant les modèles.</strong> Aucun modèle ne peut extraire une information qui n'existe pas.</td>
+<td>0</td>
+</tr>
+<tr>
+<td><strong>2</strong></td>
+<td><strong>Vérifier avant d'analyser.</strong> Une identité comptable vraie à 10⁻¹⁶ valide toute la chaîne de calcul.</td>
+<td>2</td>
+</tr>
+<tr>
+<td><strong>3</strong></td>
+<td><strong>En finance, l'écart-type dépasse la moyenne de 20 fois.</strong> Le rapport signal/bruit est catastrophique — d'où ρ = 0,15 comme « bon » résultat.</td>
+<td>3</td>
+</tr>
+<tr>
+<td><strong>4</strong></td>
+<td><strong>Moyenne ≫ médiane = loi log-normale.</strong> Passer au log avant tout modèle linéaire.</td>
+<td>4</td>
+</tr>
+<tr>
+<td><strong>5</strong></td>
+<td><strong>La régression fallacieuse</strong> : deux séries tendancielles paraissent corrélées sans lien aucun.</td>
+<td>5</td>
+</tr>
+<tr>
+<td><strong>6</strong></td>
+<td><strong>La corrélation ne voit que les droites</strong>, ne dit rien de la causalité, et craint les extrêmes.</td>
+<td>6</td>
+</tr>
+<tr>
+<td><strong>7</strong></td>
+<td><strong>Une fenêtre n'est prédictive que si elle ferme avant que la cible ne se forme.</strong> ⭐</td>
+<td>7</td>
+</tr>
+<tr>
+<td><strong>8</strong></td>
+<td><strong>Les variables liées par construction créent une colinéarité</strong> qui rend les coefficients absurdes (VIF).</td>
+<td>8</td>
+</tr>
+<tr>
+<td><strong>9</strong></td>
+<td><strong>Les quintiles ne supposent aucune forme</strong> et rendent le résultat lisible par tous. ⭐</td>
+<td>9</td>
+</tr>
+<tr>
+<td><strong>10</strong></td>
+<td><strong>Paradoxe de Simpson</strong> : toujours vérifier groupe par groupe avant d'agréger.</td>
+<td>10</td>
+</tr>
+<tr>
+<td><strong>11</strong></td>
+<td><strong>Une p-value ne dit pas la probabilité que l'hypothèse soit vraie.</strong> Préférer l'intervalle de confiance.</td>
+<td>11</td>
+</tr>
+<tr>
+<td><strong>12</strong></td>
+<td><strong>Les observations financières ne sont pas indépendantes</strong> → bootstrap par blocs. ⭐</td>
+<td>12</td>
+</tr>
+</tbody>
+</table>
+<p>Et le plus important :</p>
+<p>| <strong>13</strong> | <strong>Chercher activement à réfuter son propre résultat</strong> (lags négatifs, falsification). C'est ce qui distingue un travail scientifique d'un exercice technique. ⭐ | 14 |</p>
+<h2 id="172-les-resultats-du-notebook-04-en-une-page">17.2 — Les résultats du notebook 04, en une page</h2>
+<pre><code>mu_night_full  -&gt;  gap d'ouverture   :  rho = +0.1572     ✅ signal
+mu_night_full  -&gt;  séance            :  rho = −0.0103     ❌ rien
+mu_night_full  -&gt;  close-close       :  rho = +0.0933     ✅ intermédiaire (cohérent)
+
+Écart Q5 − Q1 sur le GAP     : +34.8 points   (z = 11.63)
+Écart Q5 − Q1 sur la SÉANCE  :  −2.2 points   (z = −0.72, p = 0.47)
+
+Monotonie             : 5 titres sur 5, Spearman moyen +0.924
+Bootstrap par blocs   : 5 titres sur 5 significatifs pour le gap, 1 sur 5 pour la séance
+Lags négatifs         : max 0.048 contre 0.157 au lag 0  -&gt;  pas de fuite
+Régimes               : 4 sur 5 significatifs
+Attention -&gt; risque   : +0.023 de R² au-delà de la volatilité passée (F = 128)
+</code></pre>
+<h2 id="173-les-cinq-phrases-pour-la-soutenance">17.3 — Les cinq phrases pour la soutenance</h2>
+<ol>
+<li>
+<p>« L'analyse exploratoire précède la modélisation : elle sert à <strong>choisir la cible</strong>, pas à prédire.
+   C'est elle qui a révélé que le signal était dans le gap et non dans la séance. »</p>
+</li>
+<li>
+<p>« Nous distinguons explicitement les fenêtres <strong>prédictives</strong> des fenêtres <strong>contemporaines</strong>. Les
+   corrélations les plus fortes du tableau brut sont contemporaines : elles mesurent la réaction du
+   sentiment au prix, et sont exclues. »</p>
+</li>
+<li>
+<p>« L'analyse par quintiles est <strong>non paramétrique</strong> : elle ne suppose aucune forme de relation. Elle
+   montre un écart de 34,8 points sur le gap et de −2,2 points sur la séance, avec les mêmes données. »</p>
+</li>
+<li>
+<p>« Les observations n'étant ni indépendantes dans le temps ni entre titres, l'incertitude est estimée
+   par <strong>bootstrap par blocs</strong>, qui préserve l'autocorrélation. Cinq titres sur cinq sont significatifs
+   pour le gap, un sur cinq pour la séance. »</p>
+</li>
+<li>
+<p>« Le test des <strong>décalages négatifs</strong> vérifie que le sentiment futur ne prédit pas le passé. Le rapport
+   est de 0,30 : aucune fuite d'information. »</p>
+</li>
+</ol>
+<hr />
+<h2 id="references">Références</h2>
+<ul>
+<li>Tukey, J. (1977). <em>Exploratory Data Analysis</em>. Addison-Wesley. — la démarche EDA</li>
+<li>Granger, C. &amp; Newbold, P. (1974). <em>Spurious Regressions in Econometrics</em>. Journal of Econometrics</li>
+<li>Simpson, E. (1951). <em>The Interpretation of Interaction in Contingency Tables</em>. JRSS-B</li>
+<li>Bickel, P. et al. (1975). <em>Sex Bias in Graduate Admissions: Data from Berkeley</em>. Science</li>
+<li>Efron, B. (1979). <em>Bootstrap Methods: Another Look at the Jackknife</em>. Annals of Statistics</li>
+<li>Künsch, H. (1989). <em>The Jackknife and the Bootstrap for General Stationary Observations</em>. Annals of Statistics</li>
+<li>Fisher, R. A. (1915). <em>Frequency distribution of the values of the correlation coefficient</em>. Biometrika</li>
+<li>Miller, E. (1977). <em>Risk, Uncertainty, and Divergence of Opinion</em>. Journal of Finance</li>
+<li>Hong, H. &amp; Stein, J. (1999). <em>A Unified Theory of Underreaction, Momentum Trading and Overreaction</em>. Journal of Finance</li>
+<li>Wasserstein, R. &amp; Lazar, N. (2016). <em>The ASA Statement on p-Values</em>. The American Statistician</li>
+</ul>
+<hr />
+<p><em>Prochain cours : notebook 05 — la construction des variables, le découpage temporel et les quatre tests
+anti-fuite.</em></p>
+</div></body></html>

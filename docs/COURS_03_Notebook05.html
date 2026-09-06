@@ -1,0 +1,1466 @@
+<!DOCTYPE html>
+<html lang="fr"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Cours 3 — Notebook 05 : les variables et le découpage anti-fuite</title><style>
+:root{--paper:#eef1f4;--surface:#fff;--surface-2:#f5f8fa;--sunken:#e4eaef;--ink:#131b24;
+--ink-2:#37475a;--muted:#66788a;--line:#d3dbe3;--line-2:#c0cbd6;--nuit:#1b4f72;
+--warn:#8a6a1f;--warn-soft:#f7f0dd}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+--paper:#0d1218;--surface:#141c25;--surface-2:#19232e;--sunken:#101820;--ink:#e6edf4;--ink-2:#b7c5d2;
+--muted:#8296a8;--line:#28343f;--line-2:#33424f;--nuit:#7fb8dd;--warn:#d6b768;--warn-soft:#2c2617}}
+:root[data-theme="dark"]{--paper:#0d1218;--surface:#141c25;--surface-2:#19232e;--sunken:#101820;
+--ink:#e6edf4;--ink-2:#b7c5d2;--muted:#8296a8;--line:#28343f;--line-2:#33424f;--nuit:#7fb8dd;
+--warn:#d6b768;--warn-soft:#2c2617}
+*,*::before,*::after{box-sizing:border-box}
+body{background:var(--paper);color:var(--ink);font-family:system-ui,-apple-system,"Segoe UI",sans-serif;
+font-size:16.5px;line-height:1.68;margin:0;padding:0 24px 100px;-webkit-font-smoothing:antialiased}
+.page{max-width:880px;margin:0 auto}
+h1{font-family:"Iowan Old Style",Georgia,serif;font-weight:600;font-size:clamp(29px,5vw,42px);
+line-height:1.13;letter-spacing:-.015em;margin:60px 0 18px;text-wrap:balance}
+h2{font-family:"Iowan Old Style",Georgia,serif;font-weight:600;font-size:27px;letter-spacing:-.01em;
+margin:52px 0 14px;text-wrap:balance}
+h3{font-family:"Iowan Old Style",Georgia,serif;font-weight:600;font-size:20px;margin:32px 0 10px}
+p{margin:0 0 16px}
+strong{font-weight:600}
+code{font-family:Consolas,"Cascadia Mono","Courier New",monospace;font-size:.87em;
+background:var(--sunken);padding:1px 5px;border-radius:2px}
+pre{background:var(--sunken);border-left:3px solid var(--nuit);padding:14px 18px;overflow-x:auto;
+border-radius:0 3px 3px 0;margin:0 0 20px}
+pre code{background:none;padding:0;font-size:13.5px;line-height:1.6;white-space:pre}
+table{border-collapse:collapse;width:100%;font-size:14.5px;background:var(--surface);
+border:1px solid var(--line);border-radius:3px;margin:0 0 22px;display:block;overflow-x:auto}
+th{text-align:left;font-weight:600;font-size:11.5px;letter-spacing:.07em;text-transform:uppercase;
+color:var(--muted);padding:11px 14px;border-bottom:1px solid var(--line-2);background:var(--surface-2);
+white-space:nowrap}
+td{padding:10px 14px;border-bottom:1px solid var(--line);vertical-align:top}
+tr:last-child td{border-bottom:0}
+blockquote{margin:0 0 22px;padding:16px 22px;background:var(--warn-soft);
+border-left:3px solid var(--warn);border-radius:0 3px 3px 0}
+blockquote p:last-child{margin:0}
+blockquote h3{margin-top:0;font-size:17.5px}
+ul,ol{margin:0 0 16px;padding-left:22px}li{margin-bottom:8px}
+hr{border:0;border-top:1px solid var(--line);margin:46px 0}
+a{color:var(--nuit)}
+</style></head>
+<body><div class="page">
+<h1 id="cours-3-notebook-05-les-variables-et-le-decoupage-anti-fuite">Cours 3 — Notebook 05 : les variables et le découpage anti-fuite</h1>
+<p><strong>Le notebook le plus important du mémoire — celui qui décide si tes résultats sont vrais</strong></p>
+<p><em>Cours détaillé, chapitre par chapitre. Chaque transformation : la notion, la formule, la valeur ajoutée
+mesurée. Chaque test : ce qu'il prouve, et pourquoi il est construit ainsi.</em></p>
+<hr />
+<h2 id="table-des-matieres">Table des matières</h2>
+<table>
+<thead>
+<tr>
+<th>#</th>
+<th>Chapitre</th>
+<th>Notion enseignée</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>0</td>
+<td>Pourquoi ce notebook est le plus important</td>
+<td>taxonomie des fuites</td>
+</tr>
+<tr>
+<td>1</td>
+<td>L'inventaire et les valeurs manquantes</td>
+<td>lire un tableau de NaN</td>
+</tr>
+<tr>
+<td>2</td>
+<td>La liste blanche codée</td>
+<td>règle exécutable</td>
+</tr>
+<tr>
+<td>3</td>
+<td>Le z-score glissant</td>
+<td><strong>standardisation causale</strong> ⭐</td>
+</tr>
+<tr>
+<td>4</td>
+<td>Le rang percentile</td>
+<td>transformation robuste</td>
+</tr>
+<tr>
+<td>5</td>
+<td>Les variables de contrôle</td>
+<td><strong>variable de confusion</strong> ⭐</td>
+</tr>
+<tr>
+<td>6</td>
+<td>Les cibles dérivées</td>
+<td>gap en excès, zone morte</td>
+</tr>
+<tr>
+<td>7</td>
+<td>Le découpage temporel</td>
+<td><strong>train / valid / test</strong> ⭐</td>
+</tr>
+<tr>
+<td>8</td>
+<td>Le purge et le walk-forward</td>
+<td>embargo, fenêtre extensible</td>
+</tr>
+<tr>
+<td>9</td>
+<td>T1 — la corrélation anormale</td>
+<td>contrôle de bon sens</td>
+</tr>
+<tr>
+<td>10</td>
+<td>T2 — l'ordre chronologique</td>
+<td>contrôle structurel</td>
+</tr>
+<tr>
+<td>11</td>
+<td>T3 — le sentiment futur</td>
+<td>falsification</td>
+</tr>
+<tr>
+<td>12</td>
+<td>T4 — le test placebo</td>
+<td><strong>contrôle négatif</strong> ⭐</td>
+</tr>
+<tr>
+<td>13</td>
+<td>L'export et la reproductibilité</td>
+<td>source unique de vérité</td>
+</tr>
+<tr>
+<td>14</td>
+<td>Trois points à corriger</td>
+<td>esprit critique</td>
+</tr>
+<tr>
+<td>15</td>
+<td>Récapitulatif</td>
+<td>les 12 idées à retenir</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h1 id="chapitre-0-pourquoi-ce-notebook-est-le-plus-important">Chapitre 0 — Pourquoi ce notebook est le plus important</h1>
+<h2 id="01-lasymetrie-fondamentale">0.1 — L'asymétrie fondamentale</h2>
+<p>Voici la phrase à comprendre avant tout le reste :</p>
+<blockquote>
+<p><strong>Un modèle mal réglé donne un mauvais résultat — qu'on voit, et qu'on corrige.
+Une fuite d'information donne un excellent résultat — qu'on ne voit pas.</strong></p>
+</blockquote>
+<p>C'est une asymétrie brutale :</p>
+<table>
+<thead>
+<tr>
+<th>Type d'erreur</th>
+<th>Symptôme</th>
+<th>Détection</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Mauvais hyperparamètres</td>
+<td>AUC = 0,52</td>
+<td>immédiate, on corrige</td>
+</tr>
+<tr>
+<td>Modèle inadapté</td>
+<td>AUC = 0,51</td>
+<td>immédiate</td>
+</tr>
+<tr>
+<td><strong>Fuite d'information</strong></td>
+<td><strong>AUC = 0,85</strong></td>
+<td><strong>aucune — on est content</strong></td>
+</tr>
+</tbody>
+</table>
+<p>Une fuite ne provoque <strong>aucune erreur</strong>. Le code tourne, les graphiques sont beaux, les chiffres sont
+excellents. On rédige, on soutient — et un membre du jury pose la bonne question.</p>
+<p><strong>D'où la stratégie de ce notebook :</strong> rendre la fuite <strong>impossible par construction</strong>, puis le <strong>prouver</strong>
+par quatre tests automatiques.</p>
+<h2 id="02-la-taxonomie-des-fuites">0.2 — La taxonomie des fuites</h2>
+<p>Il en existe plusieurs types. Les connaître, c'est savoir où regarder.</p>
+<h3 id="type-1-fuite-de-cible-target-leakage">Type 1 — Fuite de cible (<em>target leakage</em>)</h3>
+<p>Une variable explicative contient, directement ou indirectement, la réponse.</p>
+<blockquote>
+<p><strong>Exemple médical classique.</strong> On prédit si un patient a un cancer. Parmi les variables : « le patient
+a-t-il reçu une chimiothérapie ? ». Le modèle atteint 99 % — et il est inutile, car on ne prescrit une
+chimiothérapie qu'<strong>après</strong> le diagnostic.</p>
+</blockquote>
+<p><strong>Ici :</strong> mettre <code>Close</code> du jour J pour prédire <code>ret_oc</code> du jour J. C'est le rôle du test <strong>T1</strong>.</p>
+<h3 id="type-2-fuite-temporelle-look-ahead-bias">Type 2 — Fuite temporelle (<em>look-ahead bias</em>)</h3>
+<p>On utilise de l'information qui n'existait pas encore au moment de la décision.</p>
+<p><strong>Ici :</strong> trois sources possibles —
+- les fenêtres <code>mkt</code> et <code>post</code> du jour J (réglé par la liste blanche, ch. 2) ;
+- une moyenne mobile non décalée (réglé par le <code>.shift(1)</code>, ch. 3) ;
+- un découpage aléatoire au lieu de chronologique (réglé au ch. 7, testé par <strong>T2</strong>).</p>
+<h3 id="type-3-fuite-de-pretraitement-preprocessing-leakage">Type 3 — Fuite de prétraitement (<em>preprocessing leakage</em>)</h3>
+<p>La plus vicieuse : on normalise, on impute ou on sélectionne des variables <strong>sur l'ensemble des données</strong>,
+avant de découper.</p>
+<blockquote>
+<p><strong>Exemple.</strong> Tu standardises toutes tes variables avec la moyenne calculée sur 2020-2022, puis tu
+découpes. La moyenne du train contient alors de l'information de 2022. La fuite est minuscule mais
+réelle, et elle gonfle systématiquement les performances.</p>
+</blockquote>
+<p><strong>Ici :</strong> réglé par le z-score <strong>glissant</strong> (ch. 3), qui ne regarde que le passé à chaque date.</p>
+<h3 id="type-4-fuite-par-contamination-de-groupe">Type 4 — Fuite par contamination de groupe</h3>
+<p>Deux observations du même « groupe » se retrouvent l'une dans le train et l'autre dans le test.</p>
+<p><strong>Ici :</strong> deux jours consécutifs partagent 59 des 60 jours de leur fenêtre de normalisation. C'est le rôle
+du <strong>purge</strong> (ch. 8).</p>
+<hr />
+<h1 id="chapitre-1-linventaire-et-les-valeurs-manquantes">Chapitre 1 — L'inventaire et les valeurs manquantes</h1>
+<pre><code>Dimensions : 2,740 lignes x 81 colonnes
+Période    : 2020-01-02 -&gt; 2022-03-04
+
+Valeurs manquantes :
+y_gap_net          382
+mu_night_z20       106
+nabn_night_full     50
+nabn_open30         50
+nabn_mkt            50
+nabn_post           50
+sd_open30           25
+mu_open30           13   (et p10, p90, pos, neg, disp : 13 aussi)
+sd_post_lag1        11
+mu_post_lag1        10
+dmu_night           10
+mu_mkt_lag1          8
+sd_post              8
+mu_post              7
+</code></pre>
+<h2 id="11-pourquoi-regarder-les-nan-en-premier">1.1 — Pourquoi regarder les NaN en premier</h2>
+<p><strong>Un tableau de valeurs manquantes est un diagnostic.</strong> Chaque nombre raconte quelque chose sur la
+construction des données. Si un chiffre ne s'explique pas, il y a un problème.</p>
+<h2 id="12-decoder-chaque-ligne">1.2 — Décoder chaque ligne</h2>
+<table>
+<thead>
+<tr>
+<th>Colonne</th>
+<th>NaN</th>
+<th>Explication</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>y_gap_net</code></td>
+<td><strong>382</strong></td>
+<td>volontaire : les gaps dans la zone morte de ±15 bp sont neutralisés (13,9 %)</td>
+</tr>
+<tr>
+<td><code>mu_night_z20</code></td>
+<td><strong>106</strong></td>
+<td>il faut 20 jours d'historique → ~21 premiers jours × 5 titres</td>
+</tr>
+<tr>
+<td><code>nabn_*</code></td>
+<td><strong>50</strong></td>
+<td>il faut 10 jours d'historique (<code>min_periods=10</code>) → 10 × 5 titres</td>
+</tr>
+<tr>
+<td><code>sd_open30</code></td>
+<td><strong>25</strong></td>
+<td>25 jours où la fenêtre 9h30-10h contenait 0 ou 1 message</td>
+</tr>
+<tr>
+<td><code>mu_open30</code></td>
+<td><strong>13</strong></td>
+<td>13 jours sans <strong>aucun</strong> message entre 9h30 et 10h</td>
+</tr>
+<tr>
+<td><code>dmu_night</code></td>
+<td><strong>10</strong></td>
+<td>une différence a besoin d'un jour précédent → 2 × 5 titres</td>
+</tr>
+<tr>
+<td><code>mu_post</code></td>
+<td><strong>7</strong></td>
+<td>7 soirées sans aucun message après la clôture</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Tout s'explique.</strong> Aucun NaN n'est inattendu.</p>
+<h2 id="13-le-raisonnement-qui-compte">1.3 — Le raisonnement qui compte</h2>
+<p>Regarde la relation entre <code>mu_open30</code> (13 NaN) et <code>sd_open30</code> (25 NaN).</p>
+<pre><code>mu manquant  -&gt;  0 message           (13 jours)
+sd manquant  -&gt;  0 ou 1 message      (25 jours)
+</code></pre>
+<p>Il y a donc <strong>12 jours</strong> avec <strong>exactement un</strong> message entre 9h30 et 10h : la moyenne existe (c'est la
+valeur de ce message), mais l'écart-type est indéfini — on ne calcule pas une dispersion sur un point.</p>
+<p><strong>Cette cohérence interne est une validation.</strong> Si <code>sd</code> avait eu <em>moins</em> de NaN que <code>mu</code>, il y aurait eu
+une erreur quelque part.</p>
+<h2 id="14-la-regle-generale">1.4 — La règle générale</h2>
+<blockquote>
+<p><strong>Un NaN inexpliqué est un bug jusqu'à preuve du contraire.</strong></p>
+<p>Et un NaN <strong>honnête</strong> vaut toujours mieux qu'une valeur inventée. Remplacer un écart-type indéfini
+par 0 revient à affirmer « la dispersion était nulle » — ce qui est faux, on ne sait pas.</p>
+</blockquote>
+<hr />
+<h1 id="chapitre-2-la-liste-blanche-codee">Chapitre 2 — La liste blanche codée</h1>
+<pre><code class="language-python">CONNUE_A = {
+    &quot;_overnight&quot;:   0.0,    # connu à minuit
+    &quot;_pre&quot;:         9.5,    # connu à l'ouverture
+    &quot;_night_full&quot;:  9.5,
+    &quot;_open30&quot;:     10.0,
+    &quot;_mkt&quot;:        16.0,
+    &quot;_post&quot;:       24.0,
+}
+DEBUT_CIBLE = {&quot;gap&quot;: 9.5, &quot;ret_oc&quot;: 9.5, &quot;ret_cc&quot;: 9.5}
+
+def est_legale(col, cible=&quot;gap&quot;):
+    ...
+    return h &lt;= DEBUT_CIBLE[cible]
+</code></pre>
+<pre><code>LÉGALES pour prédire le gap (24)
+INTERDITES (43)
+À EXAMINER au cas par cas (14)
+</code></pre>
+<h2 id="21-la-notion-transformer-une-regle-en-code">2.1 — La notion : transformer une règle en code</h2>
+<p><strong>La règle</strong> : une variable est utilisable si elle est connue avant que la cible ne commence à se former.</p>
+<p><strong>Le problème</strong> : appliquée à la main sur 81 colonnes, cette règle sera mal appliquée. Pas par
+incompétence — par fatigue, par distraction, ou parce qu'on ajoute une colonne trois semaines plus tard
+sans y repenser.</p>
+<p><strong>La solution</strong> : encoder la règle dans une fonction. Trois avantages :</p>
+<table>
+<thead>
+<tr>
+<th>Avantage</th>
+<th>Pourquoi</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Elle ne s'oublie pas</strong></td>
+<td>toute nouvelle colonne est classée automatiquement</td>
+</tr>
+<tr>
+<td><strong>Elle est vérifiable</strong></td>
+<td>on peut la relire, la tester, la discuter</td>
+</tr>
+<tr>
+<td><strong>Elle est documentable</strong></td>
+<td>le dictionnaire <code>CONNUE_A</code> <em>est</em> la documentation</td>
+</tr>
+</tbody>
+</table>
+<blockquote>
+<p><strong>C'est un principe général en science des données :</strong> chaque fois qu'une règle méthodologique doit être
+appliquée de façon répétée, il faut l'écrire en code plutôt que la garder en tête. Le code est un
+<strong>contrat</strong> qui survit à la fatigue et au temps.</p>
+</blockquote>
+<h2 id="22-les-trois-categories-et-pourquoi-la-troisieme-existe">2.2 — Les trois catégories, et pourquoi la troisième existe</h2>
+<pre><code>LÉGALES (24)     : toutes les colonnes _overnight, _pre, _night_full
+INTERDITES (43)  : les prix du jour + toutes les colonnes _open30, _mkt, _post
+À EXAMINER (14)  : prev_close, vol_20d, dmu_night, mu_night_z20, *_lag1, y_gap_net...
+</code></pre>
+<p>La troisième catégorie renvoie <code>None</code> — « je ne sais pas ». C'est <strong>volontaire</strong>.</p>
+<p>Ces 14 colonnes ne portent pas de suffixe de fenêtre : ce sont des variables dérivées. La fonction ne peut
+pas décider seule, elle <strong>signale</strong> qu'un jugement humain est nécessaire.</p>
+<blockquote>
+<p><strong>C'est une bonne pratique de conception :</strong> un système automatique doit savoir dire « je ne sais pas »
+plutôt que deviner. En actuariat comme en médecine, un modèle qui signale son incertitude vaut mieux
+qu'un modèle qui tranche toujours.</p>
+</blockquote>
+<h2 id="23-le-jugement-sur-les-14-restantes">2.3 — Le jugement sur les 14 restantes</h2>
+<table>
+<thead>
+<tr>
+<th>Colonne</th>
+<th>Verdict</th>
+<th>Raison</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>prev_close</code>, <code>prev_volume</code>, <code>prev_ret_cc</code></td>
+<td>✅ légale</td>
+<td>décalées d'un jour</td>
+</tr>
+<tr>
+<td><code>vol_20d</code></td>
+<td>✅ légale</td>
+<td>fenêtre <code>.shift(1)</code></td>
+</tr>
+<tr>
+<td><code>dmu_night</code>, <code>mu_night_ma3</code>, <code>mu_night_z20</code></td>
+<td>✅ légale</td>
+<td>dérivées de <code>night_full</code>, connues à 9h30</td>
+</tr>
+<tr>
+<td><code>*_mkt_lag1</code>, <code>*_post_lag1</code></td>
+<td>✅ légale</td>
+<td>c'est <strong>le but</strong> du décalage (ch. 5)</td>
+</tr>
+<tr>
+<td><code>y_gap_net</code></td>
+<td>❌ cible</td>
+<td>c'est une cible, pas une variable</td>
+</tr>
+</tbody>
+</table>
+<h2 id="24-lencadre-sur-pre-la-nuance-a-retenir">2.4 — L'encadré sur <code>pre</code> : la nuance à retenir</h2>
+<p>La fenêtre <code>pre</code> se ferme <strong>exactement</strong> à l'ouverture. Statistiquement, elle est utilisable pour prédire
+le gap. Mais deux régimes doivent être distingués :</p>
+<table>
+<thead>
+<tr>
+<th>Usage</th>
+<th>Fenêtres utilisables</th>
+<th>Pourquoi</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Prédire</strong> le prix d'ouverture</td>
+<td><code>overnight</code> + <code>pre</code></td>
+<td>tout est connu à 9h29</td>
+</tr>
+<tr>
+<td><strong>Trader</strong> le gap</td>
+<td><code>overnight</code> seulement, décalé</td>
+<td>la position se prend à 16h00 la veille</td>
+</tr>
+</tbody>
+</table>
+<p><strong>D'où le « jeu conservateur »</strong> : un sous-ensemble coupé à minuit, testé au notebook 06 comme contrôle de
+robustesse. Il donne AUC = 0,597 contre 0,664 pour le jeu complet.</p>
+<p><em>(Le chapitre 14 signale un défaut dans la construction de ce jeu conservateur.)</em></p>
+<hr />
+<h1 id="chapitre-3-le-z-score-glissant">Chapitre 3 — Le z-score glissant ⭐</h1>
+<pre><code class="language-python">def zscore_glissant(s, fenetre=60, minp=20):
+    mu = s.rolling(fenetre, min_periods=minp).mean().shift(1)
+    sd = s.rolling(fenetre, min_periods=minp).std().shift(1)
+    return (s - mu) / sd.replace(0, np.nan)
+</code></pre>
+<h2 id="31-la-notion-standardiser">3.1 — La notion : standardiser</h2>
+<p><strong>Standardiser</strong> une variable, c'est la ramener à une échelle universelle :</p>
+<pre><code>              valeur observée  −  ce qui est normal
+z  =  ────────────────────────────────────────────────
+              de combien ça varie habituellement
+</code></pre>
+<p>Le résultat s'exprime <strong>en écarts-types</strong>. Un <code>z = +2</code> signifie « deux écarts-types au-dessus de la
+normale » — et cette phrase a le même sens pour n'importe quelle variable, n'importe quelle unité.</p>
+<blockquote>
+<p><strong>L'analogie.</strong> Un enfant mesure 1,30 m. Est-il grand ? Impossible à dire sans savoir son âge. Le
+carnet de santé n'affiche donc pas la taille brute, mais la <strong>position par rapport à sa classe d'âge</strong>.
+C'est exactement un z-score.</p>
+</blockquote>
+<h2 id="32-le-probleme-resolu-ici">3.2 — Le problème résolu ici</h2>
+<pre><code>Moyenne de mu_night_full par ticker :
+  NVDA    0.1627
+  AMZN    0.1170
+  META    0.1139
+  AAPL    0.0945
+  TSLA    0.0449
+</code></pre>
+<p>Un sentiment de 0,12 vaut :</p>
+<pre><code>Pour NVDA :  (0,12 − 0,1627) / 0,0783  =  −0,55 écart-type   -&gt;  MÉDIOCRE
+Pour TSLA :  (0,12 − 0,0449) / 0,0323  =  +2,33 écarts-types -&gt;  EXCEPTIONNEL
+</code></pre>
+<p><strong>Sans normalisation, un modèle nourri de valeurs brutes apprend l'identité du titre</strong> : « quand <code>mu</code> est
+élevé, c'est probablement NVDA, et NVDA a beaucoup monté ». Ce n'est pas un signal, c'est de la
+mémorisation — et cela ne se généralise à aucun autre titre ni à aucune autre période.</p>
+<h2 id="33-la-preuve-chiffree-que-ca-marche">3.3 — La preuve chiffrée que ça marche</h2>
+<pre><code>AVANT normalisation (moyenne de mu_night_full par ticker) :
+  AAPL 0.0945   AMZN 0.1170   META 0.1139   NVDA 0.1627   TSLA 0.0449
+
+APRÈS normalisation (moyenne de z_mu_night_full par ticker) :
+  AAPL -0.0063  AMZN -0.0720  META -0.1107  NVDA -0.1237  TSLA -0.0280
+</code></pre>
+<p>Les écarts passent d'un facteur <strong>3,6</strong> à des valeurs toutes proches de zéro.</p>
+<h3 id="et-voici-la-preuve-la-plus-convaincante">Et voici la preuve la plus convaincante</h3>
+<p>Compare ces deux corrélations, prises dans deux notebooks différents :</p>
+<table>
+<thead>
+<tr>
+<th>Variable</th>
+<th>Corrélation avec le gap</th>
+<th>Source</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>mu_night_full</code> (brut)</td>
+<td><strong>+0,157</strong></td>
+<td>notebook 04</td>
+</tr>
+<tr>
+<td><code>z_mu_night_full</code> (normalisé)</td>
+<td><strong>+0,257</strong></td>
+<td>notebook 05, test T3</td>
+</tr>
+</tbody>
+</table>
+<p><strong>La normalisation fait passer la corrélation de 0,157 à 0,257 — une amélioration de 64 %.</strong></p>
+<p><strong>Pourquoi.</strong> Le biais de niveau entre titres est un <strong>bruit</strong> qui dilue le signal. En le supprimant, on
+révèle la relation qu'il masquait. Ce n'est pas de la magie : c'est simplement qu'on mesure enfin la bonne
+chose — l'écart à la normale, et non le niveau absolu.</p>
+<blockquote>
+<p><strong>C'est un chiffre à mettre dans le mémoire.</strong> Il justifie la normalisation par un gain mesuré, et non
+par un argument théorique.</p>
+</blockquote>
+<h2 id="34-le-shift1-le-detail-qui-decide-de-tout">3.4 — Le <code>.shift(1)</code> : le détail qui décide de tout</h2>
+<pre><code class="language-python">mu = s.rolling(60).mean().shift(1)      # &lt;-- SANS ce shift, c'est une fuite
+</code></pre>
+<p><strong>Sans <code>.shift(1)</code>,</strong> la fenêtre de 60 jours <strong>inclut le jour J</strong>. On normalise donc <code>x_t</code> par une moyenne
+qui contient déjà <code>x_t</code>.</p>
+<p><strong>Quel est l'effet concret ?</strong> Il paraît minuscule — 1/60 du poids. Mais il est <strong>systématique</strong> et il va
+toujours dans le même sens : si <code>x_t</code> est très élevé, il tire sa propre moyenne de référence vers le haut,
+donc le z-score est <strong>sous-estimé</strong>. Inversement pour les valeurs basses. Le résultat est une compression
+artificielle des extrêmes… qui rend le signal plus « propre » qu'il ne l'est.</p>
+<blockquote>
+<p><strong>C'est l'erreur numéro un en finance quantitative appliquée.</strong> Elle est présente dans une grande
+partie du code publié en ligne. Retiens la règle :</p>
+<p><strong>Toute fenêtre glissante utilisée comme variable explicative doit être décalée d'au moins un pas.</strong></p>
+</blockquote>
+<h2 id="35-pourquoi-une-fenetre-glissante-et-pas-une-moyenne-globale">3.5 — Pourquoi une fenêtre glissante et pas une moyenne globale</h2>
+<p><strong>Deux raisons.</strong></p>
+<p><strong>1. La fuite.</strong> Une moyenne calculée sur 2020-2022 entier utiliserait des données de 2022 pour normaliser
+des jours de 2020. C'est la fuite de prétraitement (type 3, ch. 0).</p>
+<p><strong>2. L'adaptation aux régimes.</strong> Le niveau de bavardage sur TSLA en mars 2020 (panique COVID) n'a rien à
+voir avec janvier 2022. Une référence fixe serait fausse dans les deux cas. La fenêtre glissante <strong>suit</strong>
+le régime.</p>
+<h2 id="36-le-choix-des-parametres">3.6 — Le choix des paramètres</h2>
+<pre><code class="language-python">FENETRE_Z = 60      # ~3 mois de bourse
+MIN_OBS   = 20      # au moins 1 mois avant de produire une valeur
+</code></pre>
+<p><strong>Pourquoi 60 jours ?</strong> C'est un compromis classique :</p>
+<table>
+<thead>
+<tr>
+<th>Fenêtre</th>
+<th>Avantage</th>
+<th>Inconvénient</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>courte (20 j)</td>
+<td>s'adapte vite aux changements</td>
+<td>référence bruitée</td>
+</tr>
+<tr>
+<td><strong>moyenne (60 j)</strong></td>
+<td><strong>équilibre</strong></td>
+<td>—</td>
+</tr>
+<tr>
+<td>longue (250 j)</td>
+<td>référence stable</td>
+<td>ne voit pas les changements de régime</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Pourquoi <code>min_periods=20</code> ?</strong> Pour ne pas produire un z-score sur 3 observations, qui serait absurde. En
+dessous de 20, on renvoie <code>NaN</code> — d'où les 106 valeurs manquantes de <code>mu_night_z20</code>.</p>
+<p><strong>Le <code>.replace(0, np.nan)</code> sur l'écart-type</strong> évite une division par zéro : si les 60 derniers jours ont
+tous exactement la même valeur, <code>sd = 0</code> et le z-score serait infini.</p>
+<hr />
+<h1 id="chapitre-4-le-rang-percentile">Chapitre 4 — Le rang percentile</h1>
+<pre><code class="language-python">def rang_glissant(s, fenetre=252, minp=60):
+    return s.rolling(fenetre, min_periods=minp).apply(
+        lambda w: (w[:-1] &lt; w[-1]).mean(), raw=True)
+</code></pre>
+<h2 id="41-ce-que-fait-cette-fonction">4.1 — Ce que fait cette fonction</h2>
+<p>Pour chaque jour, elle répond à : <em>« parmi les 252 derniers jours, quelle proportion avait une valeur
+inférieure à celle d'aujourd'hui ? »</em></p>
+<pre><code>rk = 0,95  -&gt;  aujourd'hui est plus élevé que 95 % de l'année écoulée
+rk = 0,50  -&gt;  aujourd'hui est dans la moyenne
+rk = 0,02  -&gt;  aujourd'hui est parmi les 2 % les plus bas
+</code></pre>
+<p>Le résultat est toujours entre <strong>0 et 1</strong>.</p>
+<h2 id="42-pourquoi-en-plus-du-z-score">4.2 — Pourquoi en plus du z-score</h2>
+<p>Les deux normalisent, mais différemment :</p>
+<table>
+<thead>
+<tr>
+<th></th>
+<th>z-score</th>
+<th>rang percentile</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Utilise</td>
+<td>les <strong>valeurs</strong></td>
+<td>les <strong>positions</strong></td>
+</tr>
+<tr>
+<td>Sensible aux extrêmes</td>
+<td><strong>oui</strong></td>
+<td>non</td>
+</tr>
+<tr>
+<td>Suppose une forme</td>
+<td>plutôt symétrique</td>
+<td>aucune</td>
+</tr>
+<tr>
+<td>Interprétation</td>
+<td>« x écarts-types »</td>
+<td>« meilleur que y % »</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Le problème que le rang résout.</strong> Un seul jour extrême — un tweet d'Elon Musk qui multiplie l'activité
+par 10 — fait exploser l'écart-type de la fenêtre. Tous les z-scores des 60 jours suivants sont alors
+comprimés artificiellement. Le rang, lui, ne bouge pas : ce jour reste simplement « le plus élevé ».</p>
+<p><strong>Le lien avec le notebook 04.</strong> L'analyse par quintiles avait montré que l'effet est concentré dans les
+<strong>queues</strong> (Q1 et Q5), pas au milieu. Or c'est précisément aux queues que le z-score est le plus fragile
+et le rang le plus fiable. D'où son ajout.</p>
+<h2 id="43-le-cout-la-completude">4.3 — Le coût : la complétude</h2>
+<pre><code>rk_nabn_night_full    81.7 %
+rk_mu_night_full      84.4 %
+z_nabn_night_full     92.0 %
+z_mu_night_full       94.7 %
+</code></pre>
+<p>Le rang exige <code>min_periods=60</code> (contre 20 pour le z-score), donc il est disponible sur <strong>moins de
+lignes</strong>. C'est le prix de la robustesse.</p>
+<p><strong>C'est un arbitrage à assumer :</strong> une variable plus fiable mais moins souvent disponible, contre une
+variable toujours disponible mais plus fragile. Avoir les deux permet au modèle de choisir.</p>
+<hr />
+<h1 id="chapitre-5-les-variables-de-controle">Chapitre 5 — Les variables de contrôle ⭐</h1>
+<h2 id="51-lobjection-a-laquelle-elles-repondent">5.1 — L'objection à laquelle elles répondent</h2>
+<p>Imagine que tu présentes ton résultat. Un membre du jury dit :</p>
+<blockquote>
+<p><em>« Votre sentiment est élevé </em><em>parce que</em><em> l'action a monté hier. Et une action qui a monté hier a
+tendance à ouvrir en hausse — c'est le momentum, un fait connu depuis 1993. Vous avez simplement
+redécouvert le momentum, en passant par les tweets. »</em></p>
+</blockquote>
+<p><strong>C'est une objection sérieuse, et on ne peut pas y répondre avec des mots.</strong> Il faut des données.</p>
+<h2 id="52-la-notion-la-variable-de-confusion">5.2 — La notion : la variable de confusion</h2>
+<p>Une <strong>variable de confusion</strong> (<em>confounder</em>) est une variable qui influence <strong>à la fois</strong> la variable
+explicative et la cible, créant une corrélation qui n'est pas causale.</p>
+<pre><code>        rendement d'hier  (Z)
+              ╱        ╲
+             ╱          ╲
+            ▼            ▼
+    sentiment (X)  ⋯⋯⋯&gt;  gap (Y)
+                  corrélation observée
+                  mais peut-être non causale
+</code></pre>
+<p><strong>Si Z cause X et Z cause Y</strong>, alors X et Y seront corrélés même sans lien direct.</p>
+<blockquote>
+<p><strong>L'exemple canonique.</strong> Les ventes de glaces et les noyades sont fortement corrélées. La glace ne
+cause pas les noyades : la <strong>chaleur</strong> cause les deux. La température est la variable de confusion.</p>
+</blockquote>
+<h2 id="53-la-solution-controler">5.3 — La solution : contrôler</h2>
+<p><strong>Contrôler</strong> une variable, c'est l'inclure dans le modèle pour neutraliser son effet. On demande alors :</p>
+<blockquote>
+<p><em>« À rendement de la veille égal, le sentiment apporte-t-il encore quelque chose ? »</em></p>
+</blockquote>
+<p>Si oui, l'explication par le momentum est écartée.</p>
+<h2 id="54-les-neuf-controles">5.4 — Les neuf contrôles</h2>
+<table>
+<thead>
+<tr>
+<th>Variable</th>
+<th>Ce qu'elle capture</th>
+<th>Objection qu'elle neutralise</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>ret_cc_lag1</code></td>
+<td>rendement de la veille</td>
+<td>« c'est du momentum »</td>
+</tr>
+<tr>
+<td><code>ret_oc_lag1</code></td>
+<td>séance de la veille</td>
+<td>« c'est la fin de journée d'hier »</td>
+</tr>
+<tr>
+<td><code>gap_lag1</code>, <code>gap_lag2</code></td>
+<td>gaps précédents</td>
+<td>« les gaps se suivent »</td>
+</tr>
+<tr>
+<td><code>vol_20</code></td>
+<td>régime de volatilité</td>
+<td>« ça marche seulement en marché agité »</td>
+</tr>
+<tr>
+<td><code>ampl_lag1</code>, <code>ampl_ma5</code></td>
+<td>agitation de la veille</td>
+<td>idem</td>
+</tr>
+<tr>
+<td><code>vol_dollar_z</code></td>
+<td>intensité de l'activité</td>
+<td>« c'est le volume, pas le sentiment »</td>
+</tr>
+<tr>
+<td><code>dow</code></td>
+<td>jour de la semaine</td>
+<td>« c'est un effet lundi/vendredi »</td>
+</tr>
+</tbody>
+</table>
+<h2 id="55-les-effets-calendaires-pourquoi-dow-merite-detre-la">5.5 — Les effets calendaires : pourquoi <code>dow</code> mérite d'être là</h2>
+<p>Les marchés présentent des <strong>anomalies calendaires</strong> documentées depuis les années 1970 :</p>
+<ul>
+<li><strong>l'effet week-end</strong> (French, 1980) : les rendements du lundi sont historiquement plus faibles ;</li>
+<li><strong>l'effet janvier</strong> : les petites capitalisations surperforment en janvier ;</li>
+<li><strong>l'effet fin de mois</strong> : rééquilibrages institutionnels.</li>
+</ul>
+<p>Dans ton cas, <code>dow</code> capture aussi une réalité mécanique : <strong>le lundi, la fenêtre nocturne couvre 65 heures
+au lieu de 8</strong>. Si le modèle se comportait différemment le lundi, il faudrait le savoir.</p>
+<h2 id="56-le-controle-anti-fuite-de-cette-cellule">5.6 — Le contrôle anti-fuite de cette cellule</h2>
+<pre><code>VÉRIFICATION — corrélation de chaque contrôle avec la cible du MÊME jour :
+   ret_cc_lag1      rho(gap) = +0.0508
+   ret_oc_lag1      rho(gap) = +0.1029
+   gap_lag1         rho(gap) = -0.0461
+   gap_lag2         rho(gap) = +0.0706
+   vol_20           rho(gap) = +0.0516
+   ampl_lag1        rho(gap) = -0.0021
+   ampl_ma5         rho(gap) = +0.0533
+   vol_dollar_z     rho(gap) = -0.0147
+   dow              rho(gap) = -0.0186
+</code></pre>
+<p><strong>Toutes les corrélations sont faibles (|ρ| ≤ 0,10).</strong> C'est exactement ce qu'on attend : ces variables
+sont décalées, elles ne peuvent pas contenir l'information du jour J.</p>
+<p><strong>Si l'une avait valu 0,6</strong>, cela aurait signalé un <code>shift</code> oublié — la variable contiendrait la cible.</p>
+<h3 id="le-chiffre-qui-merite-un-commentaire-ret_oc_lag1-a-0103">Le chiffre qui mérite un commentaire : <code>ret_oc_lag1</code> à +0,103</h3>
+<p>C'est le plus élevé des neuf. Est-ce inquiétant ?</p>
+<p><strong>Non — et c'est même intéressant.</strong> Il dit : <em>« quand la séance d'hier a bien fini, l'ouverture
+d'aujourd'hui est un peu meilleure »</em>. C'est un effet de <strong>continuation</strong> documenté, lié à l'exécution
+différée des ordres accumulés en fin de séance.</p>
+<p><strong>Ce n'est pas une fuite</strong> : <code>ret_oc_lag1</code> est entièrement connue à 16h00 la veille. C'est un vrai
+prédicteur, faible mais légitime.</p>
+<p><strong>Et c'est précisément pourquoi il faut le contrôler :</strong> au notebook 06, le modèle « contrôles seuls »
+obtient AUC = 0,498 — donc ces variables, ensemble, ne prédisent <strong>rien</strong>. Le sentiment apporte
+<strong>+0,17 point d'AUC</strong> par-dessus. L'objection du momentum est démolie par les chiffres.</p>
+<hr />
+<h1 id="chapitre-6-les-cibles-derivees">Chapitre 6 — Les cibles dérivées</h1>
+<h2 id="61-le-gap-en-exces-du-marche">6.1 — Le gap en excès du marché</h2>
+<pre><code class="language-python">df[&quot;gap_mkt&quot;]    = df.groupby(&quot;Date&quot;)[&quot;gap&quot;].transform(&quot;mean&quot;)
+df[&quot;gap_excess&quot;] = df[&quot;gap&quot;] - df[&quot;gap_mkt&quot;]
+</code></pre>
+<h3 id="la-notion-separer-le-marche-du-titre">La notion : séparer le marché du titre</h3>
+<p>Une partie du gap d'AAPL n'a rien à voir avec AAPL : si le Nasdaq ouvre en hausse, <strong>les cinq titres</strong>
+ouvrent en hausse. C'est le <strong>facteur commun</strong> — le « marché » au sens du MEDAF (modèle d'évaluation des
+actifs financiers).</p>
+<pre><code>gap(AAPL)  =  composante MARCHÉ  +  composante SPÉCIFIQUE à AAPL
+</code></pre>
+<p><strong>Prédire la composante marché, c'est prédire le marché</strong> — un problème différent, et beaucoup plus
+étudié. La contribution originale serait de prédire la composante <strong>spécifique</strong>.</p>
+<h3 id="comment-on-lisole">Comment on l'isole</h3>
+<p>En retirant, chaque jour, la moyenne des cinq titres. C'est une version simplifiée de la
+<strong>démarché-neutralisation</strong> (<em>market-neutralization</em>) utilisée par les fonds quantitatifs.</p>
+<p><strong>Pourquoi c'est un test plus exigeant.</strong> Si le sentiment prédit encore <code>gap_excess</code>, alors le signal est
+vraiment spécifique au titre. Une stratégie construite dessus serait <strong>neutre au marché</strong> — insensible à
+la direction générale, donc bien moins risquée.</p>
+<h3 id="le-resultat-qui-surprend">Le résultat qui surprend</h3>
+<pre><code>y_gap_excess : 0.472
+</code></pre>
+<p><strong>Moins de 50 %.</strong> Comment le gap en excès peut-il être négatif plus souvent que positif, alors qu'il est
+défini comme un écart à la moyenne ?</p>
+<p><strong>Parce que la moyenne n'est pas la médiane.</strong> TSLA a des gaps très positifs et très volatils : il tire la
+moyenne du jour vers le haut. Résultat : <strong>plus de la moitié des titres se retrouvent sous la moyenne</strong>,
+même si l'écart total se compense.</p>
+<blockquote>
+<p><strong>C'est une propriété générale des distributions asymétriques</strong> : quand quelques valeurs très élevées
+tirent la moyenne, la majorité des observations passe en dessous.</p>
+<p>Exemple : dans un bar avec 9 personnes gagnant 2 000 € et une gagnant 100 000 €, le salaire moyen est
+de 11 800 €. <strong>90 % des gens sont en dessous de la moyenne.</strong></p>
+</blockquote>
+<p><strong>Une amélioration possible :</strong> utiliser la <strong>médiane</strong> transversale plutôt que la moyenne, ce qui donnerait
+mécaniquement 50 % de part et d'autre.</p>
+<h2 id="62-la-zone-morte">6.2 — La zone morte</h2>
+<pre><code class="language-python">SEUIL_BP = 15                    # 15 points de base = 0,15 %
+df[&quot;y_gap_net&quot;] = np.where(df[&quot;gap&quot;] &gt; seuil, 1,
+                    np.where(df[&quot;gap&quot;] &lt; -seuil, 0, np.nan))
+</code></pre>
+<pre><code>Jours neutralisés : 382 (13.9 % du total)
+y_gap_net : 0.599 (n = 2 358)
+</code></pre>
+<h3 id="le-probleme">Le problème</h3>
+<p>Un <strong>point de base</strong> (bp) vaut 0,01 %. Un gap de +0,013 % donne <code>y_gap = 1</code> — « hausse » — alors que ce
+mouvement est <strong>plusieurs fois plus petit que les frais de transaction</strong>.</p>
+<p>Le modèle est donc évalué sur des jours qu'il serait <strong>impossible de trader</strong>.</p>
+<h3 id="le-passage-dune-evaluation-statistique-a-une-evaluation-decisionnelle">Le passage d'une évaluation statistique à une évaluation décisionnelle</h3>
+<p>C'est un changement de perspective important, et très actuariel :</p>
+<table>
+<thead>
+<tr>
+<th>Question</th>
+<th>Type</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>« Le modèle a-t-il raison ? »</td>
+<td><strong>statistique</strong></td>
+</tr>
+<tr>
+<td>« Le modèle a-t-il raison <strong>là où ça change quelque chose</strong> ? »</td>
+<td><strong>décisionnelle</strong></td>
+</tr>
+</tbody>
+</table>
+<p>En actuariat, on ne demande pas seulement si le modèle prédit bien la sinistralité — on demande s'il la
+prédit bien <strong>là où les montants sont significatifs</strong>. Un modèle qui se trompe sur les petits sinistres et
+a raison sur les gros vaut mieux que l'inverse, même si son taux d'erreur global est plus élevé.</p>
+<p><strong>Le choix de 15 bp</strong> correspond à l'ordre de grandeur des coûts de transaction à l'ouverture (5 à 20 bp).
+C'est un paramètre à faire varier en analyse de sensibilité.</p>
+<hr />
+<h1 id="chapitre-7-le-decoupage-temporel">Chapitre 7 — Le découpage temporel ⭐</h1>
+<h2 id="71-la-regle-absolue">7.1 — La règle absolue</h2>
+<blockquote>
+<p><strong>Jamais</strong> de <code>train_test_split(shuffle=True)</code> sur des séries temporelles.</p>
+</blockquote>
+<h3 id="pourquoi-cest-catastrophique">Pourquoi c'est catastrophique</h3>
+<p>Un découpage aléatoire met des jours de 2022 dans l'entraînement et des jours de 2020 dans le test. Le
+modèle <strong>apprend le futur pour prédire le passé</strong>.</p>
+<p><strong>Concrètement</strong>, avec des données financières autocorrélées, si le 15 mars est dans le train et le
+16 mars dans le test, le modèle a quasiment vu la réponse : les deux jours partagent le même régime, la
+même volatilité, souvent la même actualité.</p>
+<p><strong>Les scores obtenus sont excellents et entièrement faux.</strong> C'est la faute la plus fréquente et la plus
+rédhibitoire dans ce type de mémoire.</p>
+<h2 id="72-pourquoi-trois-blocs-et-pas-deux">7.2 — Pourquoi trois blocs et pas deux</h2>
+<p>C'est une question qu'on pose souvent, et la réponse est subtile.</p>
+<pre><code>├──────────── TRAIN ────────────┼──── VALID ────┼──── TEST ────┤
+2020-01-02              2021-06-30      2021-11-30      2022-03-04
+</code></pre>
+<table>
+<thead>
+<tr>
+<th>Bloc</th>
+<th>À quoi il sert</th>
+<th>Combien de fois on le regarde</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>TRAIN</strong></td>
+<td>ajuster les <strong>paramètres</strong> du modèle (les coefficients)</td>
+<td>en continu</td>
+</tr>
+<tr>
+<td><strong>VALIDATION</strong></td>
+<td>choisir les <strong>hyperparamètres</strong> (C, profondeur, seuil) et le modèle final</td>
+<td>autant qu'on veut</td>
+</tr>
+<tr>
+<td><strong>TEST</strong></td>
+<td><strong>estimer</strong> la performance réelle</td>
+<td><strong>une seule fois</strong></td>
+</tr>
+</tbody>
+</table>
+<h3 id="le-concept-cle-le-surajustement-a-la-validation">Le concept clé : le surajustement à la validation</h3>
+<p>Chaque fois qu'on regarde la validation pour prendre une décision, on lui <strong>transmet un peu
+d'information</strong>. Après 50 essais d'hyperparamètres, le modèle choisi est celui qui marche le mieux <strong>sur
+cette validation précise</strong> — pas nécessairement le meilleur en général.</p>
+<blockquote>
+<p><strong>L'analogie de l'examen.</strong> Le <strong>train</strong>, ce sont les exercices d'entraînement. La <strong>validation</strong>, ce
+sont les annales que tu refais dix fois pour choisir ta méthode. Le <strong>test</strong>, c'est l'examen final.</p>
+<p>Si tu utilisais les annales comme examen, ta note serait flatteuse — tu les connais par cœur. Le test
+doit rester <strong>inconnu</strong>.</p>
+</blockquote>
+<h3 id="la-consequence-pratique">La conséquence pratique</h3>
+<blockquote>
+<p><strong>Chaque coup d'œil supplémentaire au test le transforme en validation.</strong></p>
+<p>Si tu regardes le test, modifies le modèle, puis regardes à nouveau — le chiffre annoncé n'a plus la
+signification qu'on lui prête. Il faut alors soit repartir d'un test neuf, soit annoncer honnêtement
+que l'évaluation repose sur la validation.</p>
+</blockquote>
+<p><em>(C'est exactement le point signalé dans le verdict général : la cellule de test du notebook 06 n'a jamais
+été exécutée. Tous tes chiffres sont donc des chiffres de validation glissante — ce qui est déjà hors
+échantillon et honnête, mais il faut le dire.)</em></p>
+<h2 id="73-le-resultat-et-le-point-important-a-voir">7.3 — Le résultat, et le point important à voir</h2>
+<pre><code>       n_lignes  n_jours      debut        fin  pct_gap_pos
+train      1885      377 2020-01-02 2021-06-30         59.5
+purge        25        5 2021-07-01 2021-12-03         76.0
+valid       520      104 2021-07-06 2021-11-30         60.6
+test        310       62 2021-12-06 2022-03-04         51.0
+</code></pre>
+<h3 id="le-taux-de-base-chute-dans-le-test-595-606-510">⚠ Le taux de base chute dans le test : 59,5 % → 60,6 % → <strong>51,0 %</strong></h3>
+<p><strong>C'est le chiffre le plus important de cette cellule, et il faut absolument le commenter dans le
+mémoire.</strong></p>
+<p>Le bloc de test (décembre 2021 → mars 2022) tombe dans un <strong>régime de marché différent</strong> : c'est le début
+du resserrement monétaire de la Fed et la correction du Nasdaq. Les gaps y sont positifs seulement 51 % du
+temps, contre ~60 % avant.</p>
+<p><strong>Trois conséquences :</strong></p>
+<ol>
+<li><strong>Il faut s'attendre à des performances plus faibles sur le test</strong> — pour des raisons qui n'ont rien à
+   voir avec la qualité du modèle.</li>
+<li><strong>C'est aussi une bonne nouvelle</strong> : si le modèle fonctionne encore dans un régime différent de celui
+   sur lequel il a été entraîné, sa robustesse est démontrée. <em>(Et c'est le cas : au notebook 06, le
+   régime « Resserrement Fed » donne l'AUC la plus élevée, 0,713.)</em></li>
+<li><strong>Il faut l'écrire soi-même</strong>, plutôt que de subir la question.</li>
+</ol>
+<blockquote>
+<p><strong>La phrase pour le mémoire :</strong> <em>« Le bloc de test correspond au début du resserrement monétaire de
+2022 : la proportion de gaps positifs y chute de 60 % à 51 %. Le modèle y est donc évalué dans un
+régime différent de celui de son entraînement, ce qui constitue un test de robustesse plus exigeant
+qu'un découpage homogène. »</em></p>
+</blockquote>
+<hr />
+<h1 id="chapitre-8-le-purge-et-le-walk-forward">Chapitre 8 — Le purge et le walk-forward</h1>
+<h2 id="81-le-purge-ou-embargo">8.1 — Le purge (ou embargo)</h2>
+<pre><code class="language-python">PURGE_JOURS = 5
+</code></pre>
+<h3 id="le-probleme-quil-resout">Le problème qu'il résout</h3>
+<p>Tes variables utilisent des fenêtres glissantes de 60 jours. Donc :</p>
+<pre><code>Dernier jour du TRAIN     (30 juin 2021)  utilise les 60 jours précédents
+Premier jour de la VALID  (1er juillet)   utilise les 60 jours précédents
+</code></pre>
+<p><strong>Ces deux fenêtres partagent 59 jours sur 60.</strong> Le premier jour de la validation n'est donc pas
+réellement « hors échantillon » — il est presque entièrement construit sur des données d'entraînement.</p>
+<p>C'est la <strong>fuite par contamination de groupe</strong> (type 4, ch. 0).</p>
+<h3 id="la-solution">La solution</h3>
+<p>On retire quelques jours <strong>entre</strong> les blocs. C'est le <strong>purge</strong>, formalisé par <strong>Marcos López de Prado</strong>
+dans <em>Advances in Financial Machine Learning</em> (2018) — l'ouvrage de référence sur ces questions.</p>
+<pre><code>├─── TRAIN ───┤ purge ├─── VALID ───┤ purge ├─── TEST ───┤
+              ← 5 j →              ← 5 j →
+</code></pre>
+<p><strong>Coût :</strong> 25 lignes sur 2 740, soit 0,9 %. <strong>Bénéfice :</strong> une frontière propre entre les blocs.</p>
+<blockquote>
+<p><strong>Note :</strong> López de Prado recommande un purge de la taille de la fenêtre de features (ici, 60 jours).
+Cinq jours est un compromis pragmatique — il coupe le chevauchement le plus direct sans sacrifier 11 %
+des données. À mentionner comme limite.</p>
+</blockquote>
+<h3 id="une-bizarrerie-daffichage-a-comprendre">Une bizarrerie d'affichage à comprendre</h3>
+<pre><code>purge        25        5 2021-07-01 2021-12-03         76.0
+</code></pre>
+<p><code>debut = 2021-07-01</code> et <code>fin = 2021-12-03</code> : cinq mois d'écart pour seulement 5 jours ?</p>
+<p><strong>Ce n'est pas un bug.</strong> Il y a <strong>deux purges</strong> (une après le train, une après la validation), et
+<code>groupby("bloc")</code> les regroupe sous la même étiquette. Le <code>min</code> prend la première date du premier purge,
+le <code>max</code> la dernière date du second.</p>
+<p>Les lignes sont bien exclues — seul l'affichage est trompeur. <strong>Une amélioration serait de nommer les
+purges séparément</strong> (<code>purge_1</code>, <code>purge_2</code>).</p>
+<p><em>(Le <code>pct_gap_pos = 76 %</code> sur 25 lignes n'a aucune signification statistique : l'incertitude sur un
+pourcentage calculé sur 25 observations est d'environ ±17 points.)</em></p>
+<h2 id="82-la-validation-glissante-walk-forward">8.2 — La validation glissante (walk-forward)</h2>
+<pre><code>Walk-forward : 4 plis
+  Pli 1 : train 2020-01-02 -&gt; 2021-03-16 (303 j)  |  test 2021-03-24 -&gt; 2021-06-17 (60 j)
+  Pli 2 : train 2020-01-02 -&gt; 2021-06-10 (363 j)  |  test 2021-06-18 -&gt; 2021-09-13 (60 j)
+  Pli 3 : train 2020-01-02 -&gt; 2021-09-03 (423 j)  |  test 2021-09-14 -&gt; 2021-12-07 (60 j)
+  Pli 4 : train 2020-01-02 -&gt; 2021-11-30 (483 j)  |  test 2021-12-08 -&gt; 2022-03-04 (60 j)
+</code></pre>
+<h3 id="le-probleme-du-decoupage-unique">Le problème du découpage unique</h3>
+<p>Un score obtenu sur une seule période de validation dépend <strong>de cette période</strong>. Si juillet-novembre 2021
+a été calme, le score sera flatteur ; s'il a été agité, pessimiste.</p>
+<p><strong>Un seul chiffre ne dit rien de la stabilité.</strong></p>
+<h3 id="le-principe">Le principe</h3>
+<p>On entraîne sur tout le passé disponible, on teste sur la période suivante, on avance, on recommence.</p>
+<pre><code>Pli 1 :  [══════ train ══════]--purge--[test]
+Pli 2 :  [════════ train ════════]--purge--[test]
+Pli 3 :  [══════════ train ══════════]--purge--[test]
+Pli 4 :  [════════════ train ════════════]--purge--[test]
+</code></pre>
+<p><strong>C'est la seule validation acceptable en finance</strong>, parce que c'est la seule qui reproduit la situation
+réelle : au 1ᵉʳ mars, on ne dispose que des données antérieures au 1ᵉʳ mars.</p>
+<h3 id="fenetre-extensible-vs-fenetre-glissante">Fenêtre extensible vs fenêtre glissante</h3>
+<p>Deux variantes existent :</p>
+<table>
+<thead>
+<tr>
+<th>Type</th>
+<th>Le train…</th>
+<th>Avantage</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Extensible</strong> (<em>expanding</em>) — utilisée ici</td>
+<td>grandit à chaque pli (303 → 483 j)</td>
+<td>plus de données à chaque fois</td>
+</tr>
+<tr>
+<td>Glissante (<em>rolling</em>)</td>
+<td>garde une taille fixe</td>
+<td>s'adapte mieux aux changements de régime</td>
+</tr>
+</tbody>
+</table>
+<p>Le choix de l'extensible est justifié ici par la <strong>rareté des données</strong> : avec seulement 548 jours, on ne
+peut pas se permettre d'en jeter.</p>
+<h3 id="ce-quil-faut-regarder-dans-les-resultats">Ce qu'il faut regarder dans les résultats</h3>
+<p>Pas seulement la <strong>moyenne</strong> des AUC, mais aussi :</p>
+<ul>
+<li>l'<strong>écart-type</strong> entre plis — la stabilité ;</li>
+<li>le <strong>nombre de plis au-dessus de 0,50</strong> — la fiabilité.</li>
+</ul>
+<p>Un modèle à AUC moyenne 0,60 obtenue par 0,75 / 0,48 / 0,52 / 0,65 n'est pas un bon modèle : c'est un
+modèle qui a eu de la chance une fois. <em>(Le tien fait 4 plis sur 4 au-dessus de 0,50, avec un écart-type
+de 0,022 — c'est très stable.)</em></p>
+<hr />
+<h1 id="chapitre-9-t1-la-correlation-anormale">Chapitre 9 — T1 : la corrélation anormale</h1>
+<pre><code>T1 — Corrélation feature &lt;-&gt; cible du même jour
+SEUIL_T1 = 0.40
+  [OK] Aucune corrélation suspecte.
+</code></pre>
+<h2 id="ce-quil-teste">Ce qu'il teste</h2>
+<p>Pour chaque variable explicative, on calcule sa corrélation avec la cible du <strong>même jour</strong>. Si l'une
+dépasse 0,40, c'est une alerte.</p>
+<h2 id="pourquoi-ce-test-attrape-la-fuite-de-cible">Pourquoi ce test attrape la fuite de cible</h2>
+<p><strong>Le raisonnement.</strong> En finance journalière, aucune variable légitime ne peut atteindre |ρ| &gt; 0,40 avec un
+rendement futur. Si une variable y parvient, c'est presque certainement qu'elle <strong>contient</strong> la cible.</p>
+<blockquote>
+<p><strong>Exemple typique d'accident</strong> : on garde <code>Close</code> du jour J dans les features pour prédire <code>ret_oc</code> du
+jour J. Comme <code>ret_oc = Close/Open − 1</code>, la corrélation serait énorme. Le test l'attraperait
+immédiatement.</p>
+</blockquote>
+<h2 id="pourquoi-le-seuil-de-040">Pourquoi le seuil de 0,40</h2>
+<p>Il est <strong>délibérément haut</strong>. Le but n'est pas de détecter un signal faible — c'est de détecter une
+<strong>catastrophe</strong>.</p>
+<table>
+<thead>
+<tr>
+<th>Seuil</th>
+<th>Effet</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>0,20</td>
+<td>trop bas : déclencherait sur des variables légitimes</td>
+</tr>
+<tr>
+<td><strong>0,40</strong></td>
+<td><strong>détecte les fuites franches sans faux positifs</strong></td>
+</tr>
+<tr>
+<td>0,80</td>
+<td>trop haut : laisserait passer des fuites partielles</td>
+</tr>
+</tbody>
+</table>
+<p><strong>C'est un garde-fou, pas un test statistique.</strong> Il attrape l'erreur grossière — celle qu'on commet en
+étant fatigué à 2h du matin.</p>
+<hr />
+<h1 id="chapitre-10-t2-lordre-chronologique">Chapitre 10 — T2 : l'ordre chronologique</h1>
+<pre><code>max(train) = 2021-06-30  &lt;  min(valid) = 2021-07-06   -&gt; OK
+max(valid) = 2021-11-30  &lt;  min(test)  = 2021-12-06   -&gt; OK
+</code></pre>
+<h2 id="ce-quil-teste_1">Ce qu'il teste</h2>
+<p>Que le dernier jour de chaque bloc soit <strong>strictement antérieur</strong> au premier jour du suivant.</p>
+<h2 id="pourquoi-ce-test-est-indispensable-malgre-sa-simplicite">Pourquoi ce test est indispensable malgré sa simplicité</h2>
+<p>Il paraît trivial — on vient de construire les blocs par date, comment pourraient-ils se chevaucher ?</p>
+<p><strong>Réponse : très facilement.</strong> Trois manières classiques :</p>
+<ol>
+<li>un <code>sort_values</code> oublié avant un <code>shift</code> ;</li>
+<li>une fusion (<code>merge</code>) qui réordonne les lignes ;</li>
+<li>une modification du découpage trois semaines plus tard, en oubliant qu'un bloc chevauche l'autre.</li>
+</ol>
+<blockquote>
+<p><strong>Le principe général : tester les invariants.</strong> Un <strong>invariant</strong> est une propriété qui doit être vraie
+à tout moment. Le vérifier explicitement coûte trois lignes et attrape des erreurs qui, autrement,
+resteraient invisibles.</p>
+<p>C'est le même esprit que les contrôles comptables : on ne vérifie pas que le bilan s'équilibre parce
+qu'on doute du comptable, mais parce que l'erreur est possible et silencieuse.</p>
+</blockquote>
+<p><strong>On observe aussi ici l'effet du purge</strong> : 6 jours séparent le 30 juin du 6 juillet (5 jours d'embargo
+plus un week-end).</p>
+<hr />
+<h1 id="chapitre-11-t3-le-sentiment-futur-predit-il-le-passe">Chapitre 11 — T3 : le sentiment futur prédit-il le passé ?</h1>
+<pre><code>rho(sentiment de J   -&gt; gap de J) = +0.2572   &lt;- le signal
+rho(sentiment de J+1 -&gt; gap de J) = +0.0993   &lt;- doit être proche de 0
+[OK] Le signal est bien orienté dans le temps.
+</code></pre>
+<h2 id="111-la-logique-du-test">11.1 — La logique du test</h2>
+<p><strong>Le sentiment de demain ne peut pas causer le gap d'aujourd'hui.</strong> C'est logiquement impossible.</p>
+<p>Donc si on trouvait une corrélation aussi forte à J+1 qu'à J, cela signifierait une <strong>erreur
+d'alignement</strong> : décalage de fuseau, messages rattachés au mauvais jour, <code>shift</code> dans le mauvais sens.</p>
+<p><strong>C'est un test de falsification</strong> au sens de Popper : on cherche activement à réfuter son propre
+résultat. S'il résiste, la confiance augmente considérablement.</p>
+<h2 id="112-pourquoi-00993-et-pas-00000">11.2 — Pourquoi 0,0993 et pas 0,0000 ?</h2>
+<p>C'est <strong>la question à laquelle il faut savoir répondre</strong>, parce qu'un jury attentif la posera.</p>
+<p>La réponse tient en un mot : <strong>l'autocorrélation</strong>.</p>
+<h3 id="le-mecanisme-etape-par-etape">Le mécanisme, étape par étape</h3>
+<pre><code>1.  Le sentiment est PERSISTANT :  correlation( mu(J+1) , mu(J) )  ≈  0,4
+2.  Le sentiment de J prédit le gap de J :  correlation( mu(J) , gap(J) )  =  0,257
+3.  Donc mu(J+1), qui « ressemble » à mu(J), hérite d'une partie de cette corrélation
+</code></pre>
+<p><strong>L'ordre de grandeur attendu</strong> est le produit des deux : 0,4 × 0,257 ≈ <strong>0,10</strong>.</p>
+<p><strong>On observe 0,0993.</strong> C'est exactement la valeur prédite par ce raisonnement.</p>
+<blockquote>
+<p><strong>Ce n'est donc pas une fuite</strong> — c'est une conséquence arithmétique de la persistance du sentiment.
+Si le sentiment d'un titre est élevé aujourd'hui, il a de bonnes chances de l'être demain ; la variable
+de demain est donc une version bruitée de celle d'aujourd'hui.</p>
+</blockquote>
+<h3 id="le-critere-de-decision">Le critère de décision</h3>
+<pre><code class="language-python">if abs(r1) &gt; 0.5 * abs(r0):
+    ECHEC
+</code></pre>
+<p>On échoue si le lag négatif dépasse <strong>la moitié</strong> du lag zéro. Ici : 0,0993 / 0,2572 = <strong>0,386</strong>. Le test
+passe, avec une marge confortable.</p>
+<p><strong>Pourquoi ce seuil de 0,5 ?</strong> Parce qu'une vraie fuite d'alignement donnerait un ratio proche de <strong>1</strong>
+(le décalage rendrait les deux corrélations quasi identiques), tandis que la contamination par
+autocorrélation reste sous 0,5 tant que la persistance est modérée.</p>
+<h2 id="113-le-chiffre-cache-la-preuve-que-la-normalisation-fonctionne">11.3 — Le chiffre caché : la preuve que la normalisation fonctionne</h2>
+<p>Regarde le chiffre <code>+0,2572</code>.</p>
+<p>Au notebook 04, la corrélation de <code>mu_night_full</code> <strong>brut</strong> avec le gap était de <strong>+0,157</strong>.
+Ici, avec <code>z_mu_night_full</code> <strong>normalisé</strong>, elle vaut <strong>+0,257</strong>.</p>
+<p><strong>La normalisation intra-ticker a augmenté la corrélation de 64 %.</strong></p>
+<p>C'est la <strong>valeur ajoutée mesurée</strong> du chapitre 3, et c'est un chiffre à citer dans le mémoire : la
+normalisation n'est pas un choix esthétique, elle révèle un signal que le biais de niveau masquait.</p>
+<hr />
+<h1 id="chapitre-12-t4-le-test-placebo">Chapitre 12 — T4 : le test placebo ⭐</h1>
+<pre><code>AUC avec cible PERMUTÉE : 0.4719   (doit être ~0.50)
+AUC avec cible RÉELLE   : 0.6557   (doit être nettement &gt; 0.50)
+[OK] Le pipeline n'apprend rien sur du bruit.
+</code></pre>
+<h2 id="121-la-notion-le-controle-negatif">12.1 — La notion : le contrôle négatif</h2>
+<p>Un <strong>contrôle négatif</strong> est une expérience où l'on <strong>sait</strong> que le résultat doit être nul. Si l'instrument
+produit un résultat non nul, c'est l'instrument qui est défaillant — pas le phénomène.</p>
+<blockquote>
+<p><strong>En médecine, c'est le placebo.</strong> On donne à un groupe une pilule sans principe actif. Si ce groupe
+guérit autant que le groupe traité, le médicament ne fait rien. Le placebo ne teste pas le médicament :
+il teste <strong>le protocole</strong>.</p>
+</blockquote>
+<h2 id="122-comment-il-est-construit-ici">12.2 — Comment il est construit ici</h2>
+<pre><code class="language-python">y_bidon = rng.permutation(tr[&quot;y_gap&quot;].values)   # on MÉLANGE la cible
+pipe.fit(tr[FEATURES], y_bidon)                 # on entraîne sur du bruit
+auc_bidon = roc_auc_score(te[&quot;y_gap&quot;], ...)     # on évalue sur la VRAIE cible
+</code></pre>
+<p><strong>La permutation</strong> garde exactement les mêmes valeurs de <code>y_gap</code> — même proportion de 1, même effectif —
+mais <strong>détruit le lien</strong> entre chaque ligne et sa cible. La ligne du 3 mars reçoit la cible du 17 août.</p>
+<p>Il ne reste donc <strong>aucune information exploitable</strong>. L'AUC attendue est <strong>0,50</strong>.</p>
+<h2 id="123-ce-que-ce-test-attrape-et-que-les-autres-ratent">12.3 — Ce que ce test attrape, et que les autres ratent</h2>
+<p>C'est le test le plus puissant des quatre, parce qu'il vérifie <strong>le pipeline entier</strong>, pas une hypothèse
+particulière.</p>
+<table>
+<thead>
+<tr>
+<th>Problème</th>
+<th>T1</th>
+<th>T2</th>
+<th>T3</th>
+<th><strong>T4</strong></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Une feature contient la cible</td>
+<td>✅</td>
+<td></td>
+<td></td>
+<td>✅</td>
+</tr>
+<tr>
+<td>Blocs qui se chevauchent</td>
+<td></td>
+<td>✅</td>
+<td></td>
+<td>✅</td>
+</tr>
+<tr>
+<td>Décalage temporel</td>
+<td></td>
+<td></td>
+<td>✅</td>
+<td>✅</td>
+</tr>
+<tr>
+<td>Imputation calculée sur tout le jeu</td>
+<td></td>
+<td></td>
+<td></td>
+<td>✅</td>
+</tr>
+<tr>
+<td>Sélection de variables faite avant le découpage</td>
+<td></td>
+<td></td>
+<td></td>
+<td>✅</td>
+</tr>
+<tr>
+<td>Bug d'indexation dans le code</td>
+<td></td>
+<td></td>
+<td></td>
+<td>✅</td>
+</tr>
+</tbody>
+</table>
+<p><strong>T4 est un filet de sécurité global.</strong> Si le pipeline apprend quoi que ce soit sur du bruit pur, quelque
+chose est structurellement cassé — et on ne sait pas forcément quoi, mais on sait qu'il faut chercher.</p>
+<h2 id="124-pourquoi-04719-et-pas-exactement-050">12.4 — Pourquoi 0,4719 et pas exactement 0,50 ?</h2>
+<p><strong>Parce que 0,50 est une espérance, pas une certitude.</strong></p>
+<p>Sur un échantillon fini, l'AUC calculée sur du bruit fluctue autour de 0,50. Son écart-type approximatif :</p>
+<pre><code>                    ┌─────────────────────┐
+écart-type(AUC)  ≈  │  1 / (12 × n_eff)  │        avec n_eff ≈ min(n1, n0)
+                   \└─────────────────────┘
+</code></pre>
+<p>Sur 520 observations de validation avec ~60 % de positifs, cela donne un écart-type d'environ <strong>0,025</strong>.</p>
+<pre><code>0,4719 est à  (0,50 − 0,4719) / 0,025  =  1,1 écart-type de 0,50
+</code></pre>
+<p><strong>C'est parfaitement normal.</strong> Un écart de 1,1 écart-type arrive environ une fois sur quatre.</p>
+<p><strong>Le seuil de tolérance du code</strong> est <code>|AUC − 0,50| &gt; 0,05</code>, soit environ 2 écarts-types. Bien calibré :
+assez large pour tolérer le hasard, assez strict pour attraper une vraie fuite (qui donnerait 0,60 ou
+plus).</p>
+<h2 id="125-le-contraste-qui-est-le-vrai-resultat">12.5 — Le contraste, qui est le vrai résultat</h2>
+<pre><code>Cible permutée : 0.4719      &lt;- le pipeline n'apprend rien sur du bruit
+Cible réelle   : 0.6557      &lt;- le pipeline apprend beaucoup sur la vraie cible
+</code></pre>
+<p><strong>C'est la comparaison qui compte, pas les valeurs isolées.</strong> Même code, mêmes variables, même découpage —
+seule la cible change. L'écart de 0,18 point d'AUC ne peut venir que de l'information réellement contenue
+dans les variables.</p>
+<blockquote>
+<p><strong>La phrase pour la soutenance :</strong> <em>« En permutant aléatoirement la cible d'entraînement, le pipeline
+obtient une AUC de 0,47 — indiscernable du hasard. Avec la cible réelle, il obtient 0,66. Le pipeline
+n'apprend donc rien de structurel : ce qu'il capte vient bien des données. »</em></p>
+</blockquote>
+<hr />
+<h1 id="chapitre-13-lexport-et-la-reproductibilite">Chapitre 13 — L'export et la reproductibilité</h1>
+<pre><code>Écrit : DATASET_MODELISATION_2020_2022.csv    2 740 lignes x 66 colonnes
+Écrit : config_modelisation.json               23 features
+</code></pre>
+<h2 id="131-pourquoi-un-fichier-de-configuration-separe">13.1 — Pourquoi un fichier de configuration séparé</h2>
+<pre><code class="language-json">{
+  &quot;features&quot;: [...23 noms...],
+  &quot;features_conservateur&quot;: [...],
+  &quot;features_sentiment&quot;: [...],
+  &quot;controles&quot;: [...],
+  &quot;fin_train&quot;: &quot;2021-06-30&quot;,
+  &quot;fin_valid&quot;: &quot;2021-11-30&quot;,
+  &quot;purge_jours&quot;: 5,
+  &quot;seuil_zone_morte_bp&quot;: 15,
+  &quot;fenetre_zscore&quot;: 60
+}
+</code></pre>
+<p><strong>Le problème qu'il résout.</strong> Les notebooks 06, 07 et 08 ont tous besoin de la même liste de variables et
+des mêmes dates. Si chacun la redéfinit, ils finiront par diverger — et les résultats ne seront plus
+comparables entre eux.</p>
+<p>C'est le principe de la <strong>source unique de vérité</strong> (déjà vu au Cours 1, ch. 1), appliqué cette fois
+<strong>entre notebooks</strong>.</p>
+<h2 id="132-la-notion-de-reproductibilite">13.2 — La notion de reproductibilité</h2>
+<p>Un travail de recherche doit pouvoir être <strong>refait à l'identique</strong> — par un jury, par un futur étudiant,
+ou par toi-même dans six mois.</p>
+<p><strong>Ce fichier JSON est la trace de tes choix.</strong> Il documente :</p>
+<ul>
+<li>quelles variables ont été utilisées (et donc lesquelles ont été écartées) ;</li>
+<li>où passent les frontières temporelles ;</li>
+<li>quels paramètres ont été retenus (60 jours, 5 jours, 15 bp).</li>
+</ul>
+<blockquote>
+<p><strong>La crise de la reproductibilité.</strong> Une étude de 2016 dans <em>Nature</em> a montré que plus de 70 % des
+chercheurs interrogés avaient échoué à reproduire les résultats d'un collègue, et plus de 50 % leurs
+propres résultats. La documentation des paramètres est le premier remède.</p>
+</blockquote>
+<h2 id="133-le-detail-des-colonnes-conservees">13.3 — Le détail des colonnes conservées</h2>
+<pre><code>2 740 lignes x 66 colonnes
+  dont 24 colonnes brutes conservées pour l'analyse descriptive
+</code></pre>
+<p>Le fichier ne garde pas que les 23 variables du modèle. Il conserve aussi :</p>
+<ul>
+<li>les <strong>métadonnées</strong> (Date, Ticker, bloc, prix) ;</li>
+<li>les <strong>cibles</strong> (y_gap, y_oc, log_ampl…) ;</li>
+<li>les <strong>24 variables brutes</strong> des fenêtres nocturnes.</li>
+</ul>
+<p><strong>Pourquoi garder les brutes alors que les modèles utilisent les normalisées ?</strong> Parce que les notebooks 07
+et 09 en ont besoin pour des analyses <strong>descriptives</strong> — les figures, les statistiques par ticker, les
+tableaux du mémoire. Les valeurs normalisées sont bonnes pour prédire, mauvaises pour décrire.</p>
+<hr />
+<h1 id="chapitre-14-trois-points-a-corriger">Chapitre 14 — Trois points à corriger</h1>
+<p><em>Un cours doit aussi apprendre à regarder son propre travail avec un œil critique. Voici trois défauts de
+ce notebook.</em></p>
+<h2 id="141-le-jeu-conservateur-nest-pas-conservateur">14.1 — ⚠ Le « jeu conservateur » n'est pas conservateur</h2>
+<pre><code class="language-python">FEATURES_CONS = [f for f in FEATURES if &quot;_pre&quot; not in f and &quot;night_full&quot; not in f]
+</code></pre>
+<p><strong>L'intention :</strong> ne garder que les variables issues de la fenêtre <code>overnight</code> (fermée à minuit), pour
+tester si le signal survit sans les messages du petit matin.</p>
+<p><strong>Le problème :</strong> ce filtre laisse passer deux variables contaminées.</p>
+<table>
+<thead>
+<tr>
+<th>Variable</th>
+<th>Passe le filtre ?</th>
+<th>Est-elle vraiment « coupée à minuit » ?</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>z_mu_overnight</code></td>
+<td>oui</td>
+<td>✅ oui</td>
+</tr>
+<tr>
+<td><code>z_sd_overnight</code></td>
+<td>oui</td>
+<td>✅ oui</td>
+</tr>
+<tr>
+<td><code>z_dmu_night</code></td>
+<td><strong>oui</strong></td>
+<td>❌ <strong>non</strong> — dérivée de <code>mu_night_full</code></td>
+</tr>
+<tr>
+<td><code>z_mu_night_ma3</code></td>
+<td><strong>oui</strong></td>
+<td>❌ <strong>non</strong> — moyenne mobile de <code>mu_night_full</code></td>
+</tr>
+</tbody>
+</table>
+<p><code>dmu_night = mu_night_full(t) − mu_night_full(t−1)</code> et <code>mu_night_ma3</code> est une moyenne de <code>mu_night_full</code>.
+<strong>Les deux contiennent donc l'information de la fenêtre <code>pre</code></strong> — celle qu'on voulait justement exclure.</p>
+<p><strong>La conséquence.</strong> Le test de robustesse du notebook 06 (« jeu conservateur », AUC = 0,597) n'est pas
+aussi propre qu'annoncé. Le vrai jeu conservateur donnerait probablement un score un peu plus faible.</p>
+<p><strong>Le correctif :</strong></p>
+<pre><code class="language-python">CONTAMINEES = [&quot;z_dmu_night&quot;, &quot;z_mu_night_ma3&quot;]
+FEATURES_CONS = [f for f in FEATURES
+                 if &quot;_pre&quot; not in f and &quot;night_full&quot; not in f
+                 and f not in CONTAMINEES]
+</code></pre>
+<blockquote>
+<p><strong>La leçon générale :</strong> filtrer par le <strong>nom</strong> d'une variable est fragile. Une variable dérivée peut
+porter un nom qui ne trahit pas son origine. Le filtre correct porterait sur la <strong>provenance</strong>, ce qui
+suppose de la déclarer explicitement à la construction.</p>
+</blockquote>
+<h2 id="142-du-code-mort">14.2 — Du code mort</h2>
+<pre><code class="language-python">FEATURES_SENT = [c_ for c_ in df.columns
+                 if c_.startswith((&quot;z_&quot;, &quot;rk_&quot;)) and &quot;night&quot; in c_ or c_.startswith(&quot;z_mu_overnight&quot;)]
+FEATURES_SENT = sorted(set([c_ for c_ in df.columns if c_.startswith((&quot;z_&quot;, &quot;rk_&quot;))]))
+</code></pre>
+<p>La première ligne est <strong>immédiatement écrasée</strong> par la seconde. Elle ne sert à rien.</p>
+<p>Pire : elle contient un piège classique de précédence des opérateurs. En Python, <code>and</code> est prioritaire sur
+<code>or</code>, donc l'expression se lit :</p>
+<pre><code>( startswith((&quot;z_&quot;,&quot;rk_&quot;)) AND &quot;night&quot; in c_ )  OR  ( startswith(&quot;z_mu_overnight&quot;) )
+</code></pre>
+<p>ce qui n'est probablement pas ce qui était voulu.</p>
+<p><strong>Sans conséquence ici</strong> (la ligne est écrasée), mais c'est le genre de code qui devient un vrai bug le
+jour où quelqu'un supprime la ligne suivante. <strong>À supprimer.</strong></p>
+<h2 id="143-letiquette-purge-ambigue">14.3 — L'étiquette « purge » ambiguë</h2>
+<p>Comme vu au chapitre 8, les deux purges partagent la même étiquette, ce qui rend l'affichage <code>debut/fin</code>
+trompeur (juillet → décembre pour 5 jours).</p>
+<p><strong>Correctif :</strong> nommer <code>purge_1</code> et <code>purge_2</code>.</p>
+<hr />
+<h1 id="chapitre-15-recapitulatif">Chapitre 15 — Récapitulatif</h1>
+<h2 id="151-les-12-idees-a-retenir">15.1 — Les 12 idées à retenir</h2>
+<table>
+<thead>
+<tr>
+<th>#</th>
+<th>Idée</th>
+<th>Chapitre</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>1</strong></td>
+<td><strong>Une fuite donne un excellent résultat qu'on ne voit pas.</strong> C'est ce qui la rend dangereuse.</td>
+<td>0</td>
+</tr>
+<tr>
+<td><strong>2</strong></td>
+<td><strong>Il existe quatre types de fuites</strong> : de cible, temporelle, de prétraitement, de groupe. Chacune a son remède.</td>
+<td>0</td>
+</tr>
+<tr>
+<td><strong>3</strong></td>
+<td><strong>Un NaN inexpliqué est un bug</strong> jusqu'à preuve du contraire — et un NaN honnête vaut mieux qu'une valeur inventée.</td>
+<td>1</td>
+</tr>
+<tr>
+<td><strong>4</strong></td>
+<td><strong>Une règle méthodologique doit être codée</strong>, pas gardée en tête. Le code survit à la fatigue.</td>
+<td>2</td>
+</tr>
+<tr>
+<td><strong>5</strong></td>
+<td><strong>La normalisation intra-ticker fait passer ρ de 0,157 à 0,257.</strong> Ce n'est pas cosmétique, c'est mesuré. ⭐</td>
+<td>3, 11</td>
+</tr>
+<tr>
+<td><strong>6</strong></td>
+<td><strong>Toute fenêtre glissante doit être décalée</strong> (<code>.shift(1)</code>). L'erreur n° 1 du domaine.</td>
+<td>3</td>
+</tr>
+<tr>
+<td><strong>7</strong></td>
+<td><strong>Une variable de confusion crée une corrélation non causale.</strong> D'où les variables de contrôle. ⭐</td>
+<td>5</td>
+</tr>
+<tr>
+<td><strong>8</strong></td>
+<td><strong>Jamais de découpage aléatoire sur des séries temporelles.</strong></td>
+<td>7</td>
+</tr>
+<tr>
+<td><strong>9</strong></td>
+<td><strong>Trois blocs, pas deux</strong> : le test ne se regarde qu'une fois, sinon il devient une validation. ⭐</td>
+<td>7</td>
+</tr>
+<tr>
+<td><strong>10</strong></td>
+<td><strong>Le purge coupe le chevauchement</strong> des fenêtres entre blocs.</td>
+<td>8</td>
+</tr>
+<tr>
+<td><strong>11</strong></td>
+<td><strong>Le walk-forward mesure la stabilité</strong>, pas seulement le niveau.</td>
+<td>8</td>
+</tr>
+<tr>
+<td><strong>12</strong></td>
+<td><strong>Le test placebo vérifie le pipeline entier.</strong> Si le code apprend sur du bruit, tout est faux. ⭐</td>
+<td>12</td>
+</tr>
+</tbody>
+</table>
+<h2 id="152-les-resultats-du-notebook-05-en-une-page">15.2 — Les résultats du notebook 05, en une page</h2>
+<pre><code>ENTRÉE   : 2 740 lignes x 81 colonnes
+SORTIE   : 2 740 lignes x 66 colonnes  +  config_modelisation.json
+
+Variables : 24 légales -&gt; 14 normalisées (12 z_ + 2 rk_) + 9 contrôles = 23 features
+Cibles    : y_gap 0,589 | y_oc 0,505 | y_cc 0,534 | y_gap_excess 0,472 | y_gap_net 0,599
+
+Découpage : train 1 885 (377 j, 59,5 % gaps +)
+            valid   520 (104 j, 60,6 %)
+            test    310 ( 62 j, 51,0 %)   &lt;- régime différent, à commenter
+            walk-forward : 4 plis de 60 jours
+
+TESTS ANTI-FUITE
+  T1  corrélation anormale    : aucune &gt; 0,40                      OK
+  T2  ordre chronologique     : train &lt; valid &lt; test               OK
+  T3  sentiment futur         : 0,099 vs 0,257  (ratio 0,39)       OK
+  T4  placebo (cible permutée): AUC 0,472 vs 0,656 réelle          OK
+</code></pre>
+<h2 id="153-les-cinq-phrases-pour-la-soutenance">15.3 — Les cinq phrases pour la soutenance</h2>
+<ol>
+<li>
+<p>« L'appartenance d'une variable à l'espace des prédicteurs est décidée par une <strong>fonction codée</strong>, non
+   par un jugement au cas par cas : la règle ne peut donc pas être oubliée quand on ajoute une colonne. »</p>
+</li>
+<li>
+<p>« Les variables de sentiment sont normalisées par un <strong>z-score glissant intra-titre, décalé d'un jour</strong>.
+   Cette normalisation fait passer la corrélation avec le gap de 0,157 à 0,257 — elle révèle un signal que
+   le biais de niveau entre titres masquait. »</p>
+</li>
+<li>
+<p>« Le découpage est <strong>strictement chronologique</strong>, avec un embargo de cinq jours entre blocs pour couper
+   le chevauchement des fenêtres glissantes. Le bloc de test correspond au resserrement monétaire de 2022,
+   où la proportion de gaps positifs chute de 60 % à 51 % : le modèle y est donc évalué dans un régime
+   différent de celui de son entraînement. »</p>
+</li>
+<li>
+<p>« Des <strong>variables de contrôle de marché</strong> — momentum, volatilité, volume, effets calendaires — sont
+   incluses pour écarter l'objection selon laquelle le signal ne serait qu'un momentum déguisé. Utilisées
+   seules, elles donnent une AUC de 0,498. »</p>
+</li>
+<li>
+<p>« Un <strong>test placebo</strong> entraîne le pipeline sur une cible aléatoirement permutée. Il obtient 0,47 —
+   indiscernable du hasard — contre 0,66 avec la cible réelle. Le pipeline n'apprend donc rien de
+   structurel. »</p>
+</li>
+</ol>
+<hr />
+<h2 id="references">Références</h2>
+<ul>
+<li>López de Prado, M. (2018). <em>Advances in Financial Machine Learning</em>. Wiley. — purge, embargo, walk-forward</li>
+<li>Jegadeesh, N. &amp; Titman, S. (1993). <em>Returns to Buying Winners and Selling Losers</em>. Journal of Finance. — le momentum</li>
+<li>French, K. (1980). <em>Stock Returns and the Weekend Effect</em>. Journal of Financial Economics</li>
+<li>Sharpe, W. (1964). <em>Capital Asset Prices</em>. Journal of Finance. — décomposition marché / spécifique</li>
+<li>Kaufman, S. et al. (2012). <em>Leakage in Data Mining</em>. ACM TKDD. — la taxonomie des fuites</li>
+<li>Baker, M. (2016). <em>1,500 scientists lift the lid on reproducibility</em>. Nature 533. — la crise de reproductibilité</li>
+<li>Arlot, S. &amp; Celisse, A. (2010). <em>A survey of cross-validation procedures</em>. Statistics Surveys</li>
+</ul>
+<hr />
+<p><em>Prochain cours : notebook 06 — les métriques, les modèles de référence, la validation glissante, les
+ablations et la calibration.</em></p>
+</div></body></html>
