@@ -1,19 +1,19 @@
 Cible,Fenetre,n,rho,p_value,STATUT
-gap,mu_overnight,2735,0.0967,4.1e-07,PRÉDICTIVE
-gap,mu_pre,2734,0.1816,1.0e-21,PRÉDICTIVE (limite)
-gap,mu_night_full,2736,0.1572,1.3e-16,PRÉDICTIVE (limite)
-gap,mu_open30,2727,0.0623,1.1e-03,CONTEMPORAINE / POSTÉRIEURE
-gap,mu_mkt,2736,0.0591,2.0e-03,CONTEMPORAINE / POSTÉRIEURE
-gap,mu_post,2733,0.0626,1.1e-03,CONTEMPORAINE / POSTÉRIEURE
-ret_oc,mu_overnight,2735,-0.0274,1.5e-01,PRÉDICTIVE
-ret_oc,mu_pre,2734,0.0128,5.0e-01,PRÉDICTIVE (limite)
-ret_oc,mu_night_full,2736,-0.0103,5.9e-01,PRÉDICTIVE (limite)
-ret_oc,mu_open30,2727,0.1021,9.1e-08,CONTEMPORAINE / POSTÉRIEURE
-ret_oc,mu_mkt,2736,0.203,7.9e-27,CONTEMPORAINE / POSTÉRIEURE
-ret_oc,mu_post,2733,0.1699,3.7e-19,CONTEMPORAINE / POSTÉRIEURE
-ret_cc,mu_overnight,2735,0.0415,3.0e-02,PRÉDICTIVE
-ret_cc,mu_pre,2734,0.1265,3.2e-11,PRÉDICTIVE (limite)
-ret_cc,mu_night_full,2736,0.0933,1.0e-06,PRÉDICTIVE (limite)
-ret_cc,mu_open30,2727,0.1186,5.3e-10,CONTEMPORAINE / POSTÉRIEURE
-ret_cc,mu_mkt,2736,0.1934,1.8e-24,CONTEMPORAINE / POSTÉRIEURE
-ret_cc,mu_post,2733,0.1703,3.1e-19,CONTEMPORAINE / POSTÉRIEURE
+gap,mu_overnight,2735,0.2156,3.9e-30,PRÉDICTIVE
+gap,mu_pre,2734,0.4007,5.5e-106,PRÉDICTIVE (limite)
+gap,mu_night_full,2736,0.3307,8.2e-71,PRÉDICTIVE (limite)
+gap,mu_open30,2727,0.129,1.4e-11,CONTEMPORAINE / POSTÉRIEURE
+gap,mu_mkt,2736,0.1142,2.1e-09,CONTEMPORAINE / POSTÉRIEURE
+gap,mu_post,2733,0.0958,5.3e-07,CONTEMPORAINE / POSTÉRIEURE
+ret_oc,mu_overnight,2735,-0.0439,2.2e-02,PRÉDICTIVE
+ret_oc,mu_pre,2734,-0.0117,5.4e-01,PRÉDICTIVE (limite)
+ret_oc,mu_night_full,2736,-0.0363,5.8e-02,PRÉDICTIVE (limite)
+ret_oc,mu_open30,2727,0.1959,5.4e-25,CONTEMPORAINE / POSTÉRIEURE
+ret_oc,mu_mkt,2736,0.3636,2.8e-86,CONTEMPORAINE / POSTÉRIEURE
+ret_oc,mu_post,2733,0.2652,3.1e-45,CONTEMPORAINE / POSTÉRIEURE
+ret_cc,mu_overnight,2735,0.1041,4.8e-08,PRÉDICTIVE
+ret_cc,mu_pre,2734,0.2475,2.0e-39,PRÉDICTIVE (limite)
+ret_cc,mu_night_full,2736,0.1836,3.7e-22,PRÉDICTIVE (limite)
+ret_cc,mu_open30,2727,0.2324,9.1e-35,CONTEMPORAINE / POSTÉRIEURE
+ret_cc,mu_mkt,2736,0.3508,4.8e-80,CONTEMPORAINE / POSTÉRIEURE
+ret_cc,mu_post,2733,0.2637,1.0e-44,CONTEMPORAINE / POSTÉRIEURE

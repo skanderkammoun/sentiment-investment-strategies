@@ -1,0 +1,6 @@
+modele,n,AUC,MCC,Brier,Accuracy,base_rate,taux_signal,gain_vs_naif
+Gradient Boosting,310,0.7912,0.4212,0.1888,0.7097,0.5097,0.5742,0.2
+Logistique (tout),310,0.7893,0.4455,0.188,0.7226,0.5097,0.5484,0.2129
+Sentiment seul,310,0.784,0.3998,0.1901,0.7,0.5097,0.5387,0.1903
+Contrôles seuls,310,0.5378,0.0991,0.2567,0.5323,0.5097,0.9387,0.0226
+Référence : toujours hausse,310,0.5,0.0,0.4806,0.5097,0.5097,1.0,0.0
