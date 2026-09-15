@@ -1,0 +1,6 @@
+Regime,n,rho_gap,IC95_gap,rho_seance,fiable
+Krach COVID,280,0.433,[+0.333 ; +0.524],-0.039,OUI
+Reprise / liquidité,985,0.214,[+0.154 ; +0.273],-0.027,OUI
+Euphorie retail,620,0.269,[+0.194 ; +0.340],-0.052,OUI
+Plateau / rotation,640,0.455,[+0.391 ; +0.514],0.0,OUI
+Resserrement Fed,211,0.407,[+0.288 ; +0.514],-0.103,OUI

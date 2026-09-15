@@ -1,6 +1,6 @@
 strategie,jours,rendement_annuel,vol_annuelle,sharpe,max_drawdown,taux_reussite,n_positions,cout_total_pct
-Référence,240,136.79,14.07,9.722,-1.37,76.67,1073,0.10000000000000002
-Signal retardé de 1 jour,239,-13.07,13.49,-0.969,-16.94,46.44,1069,0.1
-Signal INVERSÉ (doit perdre),240,-187.19,14.07,-13.303,-83.42,9.58,1073,0.1
-Sans le meilleur mois (2022-02),221,121.51,10.98,11.065,-1.33,76.92,991,0.1
-Seconde moitié de la période,120,198.28,16.77,11.82,-1.37,85.0,531,0.1
+Référence,180,48.1,11.64,4.131,-3.7,60.56,729,0.09740182937315787
+Signal retardé de 1 jour,179,-10.57,13.76,-0.768,-18.19,51.96,725,0.09744431266962261
+Signal INVERSÉ (doit perdre),180,-103.99,11.72,-8.873,-53.15,26.67,729,0.09740182937315787
+Sans le meilleur mois (2021-11),159,37.89,11.09,3.416,-3.7,58.49,647,0.09868049873416966
+Seconde moitié de la période,90,60.02,11.71,5.125,-3.32,63.33,350,0.10068664973608493

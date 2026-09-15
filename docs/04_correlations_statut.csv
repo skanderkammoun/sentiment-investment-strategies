@@ -1,19 +1,25 @@
 Cible,Fenetre,n,rho,p_value,STATUT
 gap,mu_overnight,2735,0.2156,3.9e-30,PRÉDICTIVE
-gap,mu_pre,2734,0.4007,5.5e-106,PRÉDICTIVE (limite)
+gap,mu_pre,2734,0.4007,5.5e-106,CONTAMINÉE PRÉ-MARCHÉ (exclure)
 gap,mu_night_full,2736,0.3307,8.2e-71,PRÉDICTIVE (limite)
+gap,mu_night_safe,2735,0.235,1.2e-35,PRÉDICTIVE
+gap,mu_premkt,2734,0.3938,4.4e-102,PRÉDICTIVE (limite)
 gap,mu_open30,2727,0.129,1.4e-11,CONTEMPORAINE / POSTÉRIEURE
 gap,mu_mkt,2736,0.1142,2.1e-09,CONTEMPORAINE / POSTÉRIEURE
 gap,mu_post,2733,0.0958,5.3e-07,CONTEMPORAINE / POSTÉRIEURE
 ret_oc,mu_overnight,2735,-0.0439,2.2e-02,PRÉDICTIVE
 ret_oc,mu_pre,2734,-0.0117,5.4e-01,PRÉDICTIVE (limite)
 ret_oc,mu_night_full,2736,-0.0363,5.8e-02,PRÉDICTIVE (limite)
+ret_oc,mu_night_safe,2735,-0.0443,2.1e-02,PRÉDICTIVE
+ret_oc,mu_premkt,2734,-0.0084,6.6e-01,PRÉDICTIVE (limite)
 ret_oc,mu_open30,2727,0.1959,5.4e-25,CONTEMPORAINE / POSTÉRIEURE
 ret_oc,mu_mkt,2736,0.3636,2.8e-86,CONTEMPORAINE / POSTÉRIEURE
 ret_oc,mu_post,2733,0.2652,3.1e-45,CONTEMPORAINE / POSTÉRIEURE
 ret_cc,mu_overnight,2735,0.1041,4.8e-08,PRÉDICTIVE
 ret_cc,mu_pre,2734,0.2475,2.0e-39,PRÉDICTIVE (limite)
 ret_cc,mu_night_full,2736,0.1836,3.7e-22,PRÉDICTIVE (limite)
+ret_cc,mu_night_safe,2735,0.1162,1.1e-09,PRÉDICTIVE
+ret_cc,mu_premkt,2734,0.2457,7.2e-39,PRÉDICTIVE (limite)
 ret_cc,mu_open30,2727,0.2324,9.1e-35,CONTEMPORAINE / POSTÉRIEURE
 ret_cc,mu_mkt,2736,0.3508,4.8e-80,CONTEMPORAINE / POSTÉRIEURE
 ret_cc,mu_post,2733,0.2637,1.0e-44,CONTEMPORAINE / POSTÉRIEURE

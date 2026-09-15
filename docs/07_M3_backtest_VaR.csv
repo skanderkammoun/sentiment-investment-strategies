@@ -1,3 +1,3 @@
 Modele,n,depassements,taux_observe,taux_cible,LR_Kupiec,p_value,ES_observe_pct,VaR_moyenne_pct
-VaR inconditionnelle,896,55,0.0614,0.05,2.286,0.1305,-5.607,-3.805
-VaR conditionnelle (avec attention),896,43,0.048,0.05,0.077,0.7812,-5.255,-3.835
+VaR inconditionnelle,1195,40,0.0335,0.05,7.738,0.0054,-6.299,-4.515
+VaR conditionnelle (avec attention),1195,37,0.031,0.05,10.488,0.0012,-5.376,-4.164

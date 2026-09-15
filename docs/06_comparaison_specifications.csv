@@ -1,0 +1,5 @@
+modele,n,AUC,MCC,Brier,Accuracy,base_rate,taux_signal,n_features,AUC_wf,AUC_wf_std,plis,gain_vs_naif
+A — stricte (coupée 4h00),520,0.6177,0.1565,0.231,0.625,0.6058,0.8038,18,0.5951,0.0225,4,0.0192
+B — coupée minuit,520,0.5848,0.0802,0.2356,0.5942,0.6058,0.7962,12,0.5665,0.018,4,-0.0116
+C — nuit complète (annexe),520,0.7773,0.3988,0.1875,0.7173,0.6058,0.6462,21,0.7568,0.0408,4,0.1115
+Contrôles de marché seuls,520,0.4815,0.0234,0.2409,0.6058,0.6058,0.9885,8,0.4852,0.037,4,0.0
