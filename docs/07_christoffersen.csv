@@ -1,0 +1,11 @@
+VaR,Ticker,n,x,taux,LR_uc,p_uc,LR_ind,p_ind,LR_cc,p_cc
+inconditionnelle,AAPL,240,0,,,,,,,
+inconditionnelle,AMZN,240,3,0.0125,10.033,0.0015,0.0,1.0,10.033,0.0066
+inconditionnelle,META,240,6,0.025,3.839,0.0501,0.0,1.0,3.839,0.1467
+inconditionnelle,NVDA,238,13,0.0546,0.104,0.747,0.0,1.0,0.104,0.9493
+inconditionnelle,TSLA,237,18,0.0759,2.919,0.0875,1.778,0.1823,4.698,0.0955
+conditionnelle,AAPL,240,5,0.0208,5.458,0.0195,0.0,1.0,5.458,0.0653
+conditionnelle,AMZN,240,8,0.0333,1.582,0.2084,1.316,0.2512,2.899,0.2347
+conditionnelle,META,240,10,0.0417,0.371,0.5424,0.653,0.419,1.024,0.5993
+conditionnelle,NVDA,238,5,0.021,5.337,0.0209,0.0,1.0,5.337,0.0693
+conditionnelle,TSLA,237,9,0.038,0.784,0.3759,0.0,1.0,0.784,0.6757

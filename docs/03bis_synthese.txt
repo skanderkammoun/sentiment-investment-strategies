@@ -1,0 +1,7 @@
+rho_minuit=0.2236
+rho_4h=0.2448
+rho_9h30=0.3467
+part_anticipatrice=0.7061
+part_contemporaine=0.2939
+messages_avant_4h=1211240
+messages_total=1708692

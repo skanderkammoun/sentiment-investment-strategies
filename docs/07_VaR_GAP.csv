@@ -1,0 +1,3 @@
+Modele,n,depassements,taux,LR_Kupiec,p_value,ES_pct,VaR_moy_pct
+VaR gap inconditionnelle,1195,40,0.0335,7.738,0.0054,-4.32,-2.789
+VaR gap conditionnelle (attention),1195,52,0.0435,1.105,0.2933,-2.393,-2.208

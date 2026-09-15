@@ -1,0 +1,5 @@
+Modele,plis,R2_oos,R2_std,QLIKE
+Ridge : vol. + attention,4,0.5594,0.0454,0.3611
+GBM  : vol. + attention,4,0.5552,0.0421,0.3594
+Ridge : vol. passée,4,0.5346,0.0613,0.3942
+Naïf (amplitude de J-1),4,0.3085,0.1041,0.6738

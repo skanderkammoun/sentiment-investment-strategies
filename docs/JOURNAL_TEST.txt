@@ -1,0 +1,1 @@
+2026-09-10 02:34:59 | spec=A_stricte | n_features=18 | coupure=4.0h

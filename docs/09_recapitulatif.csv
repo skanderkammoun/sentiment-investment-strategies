@@ -1,0 +1,5 @@
+Modele,Cible,Type,Attendu,Metrique,Interpretation
+M1 — Gap,signe de gap = Open/Close(J-1) - 1,classification,signal présent,AUC / MCC,information nocturne non encore incorporée
+M2 — Séance,signe de ret_oc = Close/Open - 1,classification,PAS de signal,AUC + puissance,efficience semi-forte (Fama 1970)
+M3 — Risque,log de l'amplitude (High-Low)/Open,régression,meilleur R2,R2 hors éch. / QLIKE,"l'attention prédit la volatilité, pas la direction"
+Backtest,P&L close-to-open,simulation,dépend des coûts,Sharpe / break-even,efficience au sens de Jensen (1978)

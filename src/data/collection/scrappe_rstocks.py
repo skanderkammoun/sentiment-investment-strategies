@@ -1,5 +1,6 @@
 import logging
 import datetime
+import time
 from pathlib import Path
 import pandas as pd
 from seleniumbase import SB
@@ -30,7 +31,7 @@ OUTPUT_FILE = OUTPUT_DIR / f"reddit_{SUBREDDIT}_data_massive.csv"
 def scraper_reddit_stocks_maximum() -> None:
     toutes_les_donnees = []
     
-    logger.info(f"Demarrage du navigateur furtif pour la cible : r/{SUBREDDIT}...")
+    logger.info(f"🚀 Demarrage du navigateur furtif pour la cible : r/{SUBREDDIT}...")
     
     try:
         with SB(uc=True, test=True) as sb:
@@ -41,47 +42,97 @@ def scraper_reddit_stocks_maximum() -> None:
             sb.sleep(5) 
             
             for ticker in TICKERS:
-                logger.info(f"Recherche en cours pour le ticker : {ticker} ...")
-                # Parametres : restrict_sr=1 (limite a ce forum) & sort=new (les plus recents)
-                url = f"https://www.reddit.com/r/{SUBREDDIT}/search/?q={ticker}&restrict_sr=1&sort=new"
+                logger.info(f"🔍 Recherche en cours pour le ticker : {ticker} ...")
+                # Parametres : restrict_sr=1 (limite a ce forum), sort=new & t=all (historique max)
+                url = f"https://www.reddit.com/r/{SUBREDDIT}/search/?q={ticker}&restrict_sr=1&sort=new&t=all"
                 
                 sb.activate_cdp_mode(url)
                 sb.sleep(6) # Pause legerement augmentee pour les chargements lourds
                 
-                post_title_selector = '[data-testid="post-title"]'
+                logger.info(f"⏬ Defilement PROFOND (Smart Scrolling max {MAX_SCROLLS}) pour {ticker}...")
                 
-                try:
-                    # Timeout long (25s) pour la robustesse réseau
-                    sb.wait_for_element(post_title_selector, timeout=25)
-                except Exception as e:
-                    logger.warning(f"Aucun post trouve pour {ticker} (ou temps de reponse trop long).")
-                    continue
-                    
-                logger.info(f"Defilement PROFOND (Mode Maximum : {MAX_SCROLLS} scrolls) pour {ticker}...")
+                # --- NOUVEAU SMART SCROLLING ---
+                last_height = sb.execute_script("return document.body.scrollHeight")
+                scroll_count = 0
                 
-                # --- BOUCLE D'EXTRACTION MAXIMALE ---
-                for scroll_idx in range(MAX_SCROLLS):
+                while scroll_count < MAX_SCROLLS:
                     sb.scroll_down(45)
-                    # Pause indispensable : plus la page est longue, plus elle met de temps a charger la suite
                     sb.sleep(0.6) 
                     
-                    # Log de progression tous les 50 scrolls pour savoir que le script n'est pas planté
-                    if (scroll_idx + 1) % 50 == 0:
-                        logger.info(f"Progression : {scroll_idx + 1}/{MAX_SCROLLS} scrolls effectues pour {ticker}...")
+                    new_height = sb.execute_script("return document.body.scrollHeight")
+                    if new_height == last_height:
+                        logger.info(f"🛑 Fin de la page atteinte pour {ticker} apres {scroll_count} scrolls.")
+                        break
+                    last_height = new_height
+                    scroll_count += 1
+                    
+                    # Log de progression tous les 50 scrolls
+                    if scroll_count % 50 == 0:
+                        logger.info(f"Progression : {scroll_count}/{MAX_SCROLLS} scrolls effectues pour {ticker}...")
                 
-                # Aspiration du DOM HTML final
-                posts = sb.select_all(post_title_selector)
-                logger.info(f"Extraction terminee : {len(posts)} elements bruts captures pour {ticker}.")
+                logger.info(f"🧠 Extraction JS ultra-agressive pour {ticker}...")
                 
-                for post in posts:
-                    titre = post.text
-                    if titre:
-                        toutes_les_donnees.append({
-                            'Date_Scraping': datetime.datetime.now().strftime('%Y-%m-%d'),
-                            'Ticker': ticker,
-                            'Subreddit': SUBREDDIT,
-                            'Titre': titre
-                        })
+                # --- LE SUPER EXTRACTEUR JS (Titre + Vraie Date) ---
+                js_extractor = """
+                var extracted_data = [];
+                var titles_found = new Set();
+                
+                // Strategie 1 : Balise shreddit-post
+                var posts = document.querySelectorAll('shreddit-post');
+                if (posts.length > 0) {
+                    posts.forEach(function(post) {
+                        var title = post.getAttribute('post-title');
+                        var timestamp = post.getAttribute('created-timestamp');
+                        if (title && timestamp) {
+                            var date_only = timestamp.split('T')[0];
+                            title = title.replace(/\\n/g, ' ').trim();
+                            if (!titles_found.has(title)) {
+                                extracted_data.push({'titre': title, 'date': date_only});
+                                titles_found.add(title);
+                            }
+                        }
+                    });
+                }
+                
+                // Strategie 2 : Recherche par liens (Fallback si l'interface change)
+                if (extracted_data.length === 0) {
+                    // On cible spécifiquement le forum stocks
+                    var links = document.querySelectorAll('a[href*="/r/stocks/comments/"]');
+                    links.forEach(function(link) {
+                        var title = link.innerText;
+                        if (title && title.trim().length > 5 && !title.includes(' comments')) {
+                            title = title.replace(/\\n/g, ' ').trim();
+                            var container = link.closest('faceplate-tracker, div') || document;
+                            var timeNode = container.querySelector('time, faceplate-timeago');
+                            var date_only = "Date_Inconnue";
+                            
+                            if (timeNode) {
+                                var ts = timeNode.getAttribute('ts') || timeNode.getAttribute('datetime');
+                                if (ts) {
+                                    date_only = ts.split('T')[0];
+                                }
+                            }
+                            
+                            if (!titles_found.has(title)) {
+                                extracted_data.push({'titre': title, 'date': date_only});
+                                titles_found.add(title);
+                            }
+                        }
+                    });
+                }
+                return extracted_data;
+                """
+                
+                posts_data = sb.execute_script(js_extractor)
+                logger.info(f"✅ Extraction terminee : {len(posts_data)} posts captures pour {ticker}.")
+                
+                for item in posts_data:
+                    toutes_les_donnees.append({
+                        'Date_Publication': item['date'], # Injection de la date reelle !
+                        'Ticker': ticker,
+                        'Subreddit': SUBREDDIT,
+                        'Titre': item['titre']
+                    })
                         
                 # Pause pour refroidir la connexion avant la prochaine recherche
                 logger.info(f"Pause de securite avant le prochain ticker...")
@@ -100,12 +151,16 @@ def scraper_reddit_stocks_maximum() -> None:
         
         df = pd.DataFrame(toutes_les_donnees)
         
-        # Filtre anti-doublons strict
-        df_unique = df.drop_duplicates(subset=['Ticker', 'Titre'])
+        # Filtre anti-doublons strict avec la Date de Publication
+        df_unique = df.drop_duplicates(subset=['Ticker', 'Titre', 'Date_Publication'])
         
         try:
             df_unique.to_csv(OUTPUT_FILE, index=False, encoding='utf-8')
-            logger.info(f"SUCCES ! {len(df_unique)} posts UNIQUES sauvegardes dans : {OUTPUT_FILE}")
+            logger.info(f"🎉 SUCCES ! {len(df_unique)} posts UNIQUES sauvegardes dans : {OUTPUT_FILE}")
+            
+            print("\n🔍 APERÇU DES 5 PREMIÈRES LIGNES :")
+            print(df_unique.head())
+            
         except Exception as e:
             logger.error(f"Erreur d'ecriture lors de la sauvegarde CSV : {e}")
     else:
